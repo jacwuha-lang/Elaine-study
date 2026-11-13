@@ -1,0 +1,33 @@
+/* 独立调试页的壳：只负责把画面居中放大。
+   主应用里的布局在 ../css/arcade.css，两者互不干扰。 */
+html, body {
+  margin: 0; height: 100%; overflow: hidden;
+  background: #0a1014;
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+#stage {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 40%, #16242c 0%, #0c1418 60%, #070b0e 100%);
+}
+#stage canvas {
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  box-shadow: 0 0 0 1px #24473c, 0 0 0 4px #0b1512, 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+#hint {
+  position: fixed; left: 8px; right: 8px; bottom: 8px;
+  text-align: center;
+  color: #4a6a60;
+  font-size: 11px; letter-spacing: 1px;
+  pointer-events: none; user-select: none;
+}
+@media (orientation: portrait) and (max-width: 520px) {
+  #hint { display: none; }
+  /* 竖屏挂了键盘之后整体往上靠，别在头顶留一大片黑 */
+  #stage.has-keys { justify-content: flex-start !important; padding-top: 10px; }
+}

@@ -1,0 +1,7 @@
+# 句子小魔法 本地服务依赖
+#
+#   pip install -r requirements.txt
+#
+# edge-tts : 小鲸的配音（微软在线语音，1~2 秒一句）
+#            没装也能跑，会自动退回浏览器自带语音
+edge-tts>=7.0

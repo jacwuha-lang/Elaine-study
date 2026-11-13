@@ -1,0 +1,747 @@
+{
+  "name": "Red Heroine Combat Set",
+  "actions": {
+    "walk": {
+      "label": "行走",
+      "frames": 8,
+      "row": 0,
+      "rect": [
+        0,
+        0,
+        512,
+        64
+      ],
+      "frame_size": [
+        64,
+        64
+      ],
+      "root": [
+        33,
+        60
+      ],
+      "loop": true,
+      "durations_ms": [
+        95,
+        105,
+        95,
+        105,
+        95,
+        105,
+        95,
+        105
+      ],
+      "events": [
+        {
+          "frame": 0,
+          "name": "foot_contact"
+        },
+        {
+          "frame": 4,
+          "name": "foot_contact"
+        }
+      ],
+      "bundle": "v6/walk/manifest.json",
+      "sheet": "v6/walk/sheet.png",
+      "body_sheet": "v6/walk/body-sheet.png",
+      "display_sheet": "v6/walk/display-sheet.png",
+      "full_fx": null
+    },
+    "run": {
+      "label": "奔跑",
+      "frames": 8,
+      "row": 1,
+      "rect": [
+        0,
+        64,
+        512,
+        64
+      ],
+      "frame_size": [
+        64,
+        64
+      ],
+      "root": [
+        33,
+        60
+      ],
+      "loop": true,
+      "durations_ms": [
+        75,
+        75,
+        65,
+        55,
+        75,
+        75,
+        65,
+        55
+      ],
+      "events": [
+        {
+          "frame": 0,
+          "name": "foot_contact"
+        },
+        {
+          "frame": 4,
+          "name": "foot_contact"
+        }
+      ],
+      "bundle": "v6/run/manifest.json",
+      "sheet": "v6/run/sheet.png",
+      "body_sheet": "v6/run/body-sheet.png",
+      "display_sheet": "v6/run/display-sheet.png",
+      "full_fx": null
+    },
+    "jump": {
+      "label": "跳跃",
+      "frames": 10,
+      "row": 2,
+      "rect": [
+        0,
+        128,
+        640,
+        64
+      ],
+      "frame_size": [
+        64,
+        64
+      ],
+      "root": [
+        33,
+        60
+      ],
+      "loop": false,
+      "durations_ms": [
+        100,
+        85,
+        80,
+        80,
+        120,
+        90,
+        85,
+        90,
+        100,
+        160
+      ],
+      "events": [
+        {
+          "frame": 1,
+          "name": "takeoff"
+        },
+        {
+          "frame": 4,
+          "name": "apex"
+        },
+        {
+          "frame": 7,
+          "name": "land"
+        },
+        {
+          "frame": 9,
+          "name": "recovered"
+        }
+      ],
+      "bundle": "v6/jump/manifest.json",
+      "sheet": "v6/jump/sheet.png",
+      "body_sheet": "v6/jump/body-sheet.png",
+      "display_sheet": "v6/jump/display-sheet.png",
+      "full_fx": null
+    },
+    "heal": {
+      "label": "回血",
+      "frames": 10,
+      "row": 3,
+      "rect": [
+        0,
+        192,
+        640,
+        64
+      ],
+      "frame_size": [
+        64,
+        64
+      ],
+      "root": [
+        33,
+        60
+      ],
+      "loop": false,
+      "durations_ms": [
+        100,
+        95,
+        100,
+        120,
+        140,
+        130,
+        110,
+        95,
+        100,
+        180
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "charge"
+        },
+        {
+          "frame": 5,
+          "name": "healing_peak"
+        },
+        {
+          "frame": 8,
+          "name": "recovered"
+        }
+      ],
+      "bundle": "v6/heal/manifest.json",
+      "sheet": "v6/heal/sheet.png",
+      "body_sheet": "v6/heal/body-sheet.png",
+      "display_sheet": "v6/heal/display-sheet.png",
+      "full_fx": null
+    },
+    "attack": {
+      "label": "拔剑攻击",
+      "frames": 8,
+      "row": 4,
+      "rect": [
+        0,
+        256,
+        512,
+        64
+      ],
+      "frame_size": [
+        64,
+        64
+      ],
+      "root": [
+        33,
+        60
+      ],
+      "loop": false,
+      "durations_ms": [
+        120,
+        90,
+        75,
+        80,
+        80,
+        95,
+        110,
+        160
+      ],
+      "events": [
+        {
+          "frame": 1,
+          "name": "draw_start"
+        },
+        {
+          "frame": 3,
+          "name": "blade_drawn"
+        },
+        {
+          "frame": 4,
+          "name": "strike"
+        },
+        {
+          "frame": 7,
+          "name": "recovered"
+        }
+      ],
+      "bundle": "v6/attack/manifest.json",
+      "sheet": "v6/attack/sheet.png",
+      "body_sheet": "v6/attack/body-sheet.png",
+      "display_sheet": "v6/attack/display-sheet.png",
+      "full_fx": null
+    },
+    "block": {
+      "label": "格挡",
+      "frames": 8,
+      "row": 5,
+      "rect": [
+        0,
+        320,
+        512,
+        64
+      ],
+      "frame_size": [
+        64,
+        64
+      ],
+      "root": [
+        33,
+        60
+      ],
+      "loop": false,
+      "durations_ms": [
+        100,
+        80,
+        150,
+        75,
+        90,
+        180,
+        100,
+        160
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "guard_on"
+        },
+        {
+          "frame": 3,
+          "name": "parry_contact"
+        },
+        {
+          "frame": 6,
+          "name": "guard_off"
+        }
+      ],
+      "bundle": "v6/block/manifest.json",
+      "sheet": "v6/block/sheet.png",
+      "body_sheet": "v6/block/body-sheet.png",
+      "display_sheet": "v6/block/display-sheet.png",
+      "full_fx": null
+    },
+    "dodge": {
+      "label": "闪避",
+      "frames": 8,
+      "row": 6,
+      "rect": [
+        0,
+        384,
+        512,
+        64
+      ],
+      "frame_size": [
+        64,
+        64
+      ],
+      "root": [
+        33,
+        60
+      ],
+      "loop": false,
+      "durations_ms": [
+        100,
+        80,
+        65,
+        65,
+        65,
+        85,
+        100,
+        160
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "dodge_start"
+        },
+        {
+          "frame": 5,
+          "name": "dodge_end"
+        }
+      ],
+      "bundle": "v6/dodge/manifest.json",
+      "sheet": "v6/dodge/sheet.png",
+      "body_sheet": "v6/dodge/body-sheet.png",
+      "display_sheet": "v6/dodge/display-sheet.png",
+      "full_fx": null
+    },
+    "hit": {
+      "label": "挨打",
+      "frames": 8,
+      "row": 7,
+      "rect": [
+        0,
+        448,
+        512,
+        64
+      ],
+      "frame_size": [
+        64,
+        64
+      ],
+      "root": [
+        33,
+        60
+      ],
+      "loop": false,
+      "durations_ms": [
+        90,
+        65,
+        95,
+        110,
+        100,
+        100,
+        110,
+        160
+      ],
+      "events": [
+        {
+          "frame": 1,
+          "name": "impact"
+        },
+        {
+          "frame": 3,
+          "name": "stagger"
+        },
+        {
+          "frame": 7,
+          "name": "recovered"
+        }
+      ],
+      "bundle": "v6/hit/manifest.json",
+      "sheet": "v6/hit/sheet.png",
+      "body_sheet": "v6/hit/body-sheet.png",
+      "display_sheet": "v6/hit/display-sheet.png",
+      "full_fx": null
+    },
+    "skill": {
+      "label": "剑气技能",
+      "frames": 10,
+      "row": 8,
+      "rect": [
+        0,
+        512,
+        640,
+        64
+      ],
+      "frame_size": [
+        64,
+        64
+      ],
+      "root": [
+        33,
+        60
+      ],
+      "loop": false,
+      "durations_ms": [
+        100,
+        100,
+        110,
+        160,
+        80,
+        80,
+        80,
+        95,
+        120,
+        180
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "charge"
+        },
+        {
+          "frame": 5,
+          "name": "release"
+        },
+        {
+          "frame": 9,
+          "name": "recovered"
+        }
+      ],
+      "bundle": "v6/skill/manifest.json",
+      "sheet": "v6/skill/sheet.png",
+      "body_sheet": "v6/skill/body-sheet.png",
+      "display_sheet": "v6/skill/display-sheet.png",
+      "full_fx": "v6/skill/full-fx"
+    },
+    "ultimate": {
+      "label": "剑阵大招",
+      "frames": 12,
+      "row": 9,
+      "rect": [
+        0,
+        576,
+        768,
+        64
+      ],
+      "frame_size": [
+        64,
+        64
+      ],
+      "root": [
+        33,
+        60
+      ],
+      "loop": false,
+      "durations_ms": [
+        100,
+        110,
+        120,
+        130,
+        160,
+        180,
+        80,
+        90,
+        100,
+        120,
+        140,
+        200
+      ],
+      "events": [
+        {
+          "frame": 1,
+          "name": "charge_start"
+        },
+        {
+          "frame": 4,
+          "name": "charge_full"
+        },
+        {
+          "frame": 6,
+          "name": "release"
+        },
+        {
+          "frame": 11,
+          "name": "recovered"
+        }
+      ],
+      "bundle": "v6/ultimate/manifest.json",
+      "sheet": "v6/ultimate/sheet.png",
+      "body_sheet": "v6/ultimate/body-sheet.png",
+      "display_sheet": "v6/ultimate/display-sheet.png",
+      "full_fx": "v6/ultimate/full-fx"
+    },
+    "seal": {
+      "label": "结印技能",
+      "frames": 10,
+      "row": 10,
+      "rect": [
+        0,
+        640,
+        640,
+        64
+      ],
+      "frame_size": [
+        64,
+        64
+      ],
+      "root": [
+        33,
+        60
+      ],
+      "loop": false,
+      "durations_ms": [
+        110,
+        90,
+        100,
+        110,
+        150,
+        130,
+        110,
+        100,
+        95,
+        180
+      ],
+      "events": [
+        {
+          "frame": 1,
+          "name": "sword_stowed"
+        },
+        {
+          "frame": 3,
+          "name": "seal_start"
+        },
+        {
+          "frame": 4,
+          "name": "charge"
+        },
+        {
+          "frame": 7,
+          "name": "release"
+        },
+        {
+          "frame": 9,
+          "name": "recovered"
+        }
+      ],
+      "bundle": "v6/seal/manifest.json",
+      "sheet": "v6/seal/sheet.png",
+      "body_sheet": "v6/seal/body-sheet.png",
+      "display_sheet": "v6/seal/display-sheet.png",
+      "full_fx": "v6/seal/full-fx"
+    },
+    "talisman": {
+      "label": "符箓技能",
+      "frames": 10,
+      "row": 11,
+      "rect": [
+        0,
+        704,
+        640,
+        64
+      ],
+      "frame_size": [
+        64,
+        64
+      ],
+      "root": [
+        33,
+        60
+      ],
+      "loop": false,
+      "durations_ms": [
+        100,
+        90,
+        100,
+        90,
+        80,
+        100,
+        100,
+        110,
+        120,
+        180
+      ],
+      "events": [
+        {
+          "frame": 2,
+          "name": "aim"
+        },
+        {
+          "frame": 4,
+          "name": "release"
+        },
+        {
+          "frame": 7,
+          "name": "projectile_clear"
+        },
+        {
+          "frame": 9,
+          "name": "recovered"
+        }
+      ],
+      "bundle": "v6/talisman/manifest.json",
+      "sheet": "v6/talisman/sheet.png",
+      "body_sheet": "v6/talisman/body-sheet.png",
+      "display_sheet": "v6/talisman/display-sheet.png",
+      "full_fx": "v6/talisman/full-fx"
+    },
+    "defeat_kneel": {
+      "label": "血空跪地",
+      "frames": 8,
+      "row": 12,
+      "rect": [
+        0,
+        768,
+        512,
+        64
+      ],
+      "frame_size": [
+        64,
+        64
+      ],
+      "root": [
+        33,
+        60
+      ],
+      "loop": false,
+      "durations_ms": [
+        100,
+        100,
+        110,
+        140,
+        170,
+        160,
+        140,
+        300
+      ],
+      "events": [
+        {
+          "frame": 1,
+          "name": "kneel_start"
+        },
+        {
+          "frame": 2,
+          "name": "knees_down"
+        },
+        {
+          "frame": 3,
+          "name": "blood_spit"
+        },
+        {
+          "frame": 7,
+          "name": "defeated"
+        }
+      ],
+      "bundle": "v6/defeat_kneel/manifest.json",
+      "sheet": "v6/defeat_kneel/sheet.png",
+      "body_sheet": "v6/defeat_kneel/body-sheet.png",
+      "display_sheet": "v6/defeat_kneel/display-sheet.png",
+      "full_fx": null
+    },
+    "unconscious": {
+      "label": "倒地昏迷",
+      "frames": 8,
+      "row": 13,
+      "rect": [
+        0,
+        832,
+        512,
+        64
+      ],
+      "frame_size": [
+        64,
+        64
+      ],
+      "root": [
+        33,
+        60
+      ],
+      "loop": false,
+      "durations_ms": [
+        90,
+        90,
+        100,
+        120,
+        150,
+        180,
+        180,
+        350
+      ],
+      "events": [
+        {
+          "frame": 0,
+          "name": "final_hit"
+        },
+        {
+          "frame": 3,
+          "name": "ground_impact"
+        },
+        {
+          "frame": 5,
+          "name": "unconscious"
+        },
+        {
+          "frame": 7,
+          "name": "held"
+        }
+      ],
+      "bundle": "v6/unconscious/manifest.json",
+      "sheet": "v6/unconscious/sheet.png",
+      "body_sheet": "v6/unconscious/body-sheet.png",
+      "display_sheet": "v6/unconscious/display-sheet.png",
+      "full_fx": null
+    }
+  },
+  "atlas": "combat-body-atlas.png",
+  "atlas_size": [
+    768,
+    896
+  ],
+  "atlas_columns": 12,
+  "transparent_padding": true,
+  "direction": "right",
+  "view": "original three-quarter",
+  "total_character_frames": 126,
+  "alpha": "binary",
+  "loop": false,
+  "notes": [
+    "Preview GIFs repeat for inspection; walk and run are gameplay loops.",
+    "Dodge is root-aligned; engine controls world displacement and invulnerability.",
+    "Event labels do not implement damage, collision or invulnerability.",
+    "Sword Qi, sword array, hand seals and talisman throws have independent 128x96 FX.",
+    "Walk and run are in-place loops; jump and heal are one-shot sequences.",
+    "Sword is held by the anatomical right hand on the image-left shoulder side.",
+    "Defeat kneel uses restrained red pixels; blood is symbolic, not graphic.",
+    "No ImageGen used; reference identity pixels retained and poses redrawn."
+  ]
+}

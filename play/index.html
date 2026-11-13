@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a1014">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="单词闯关">
+<title>单词闯关</title>
+<style>html,body{height:100%;margin:0;background:#0a1014;color:#e8eef5;display:flex;align-items:center;justify-content:center;font:700 16px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}a{color:#ffbe5c}</style>
+<script>
+/* 短地址 /play 的静态入口（不需要服务端路由）。
+   真正干活的是 ../play.html，这里只把查询串原样带过去。 */
+(function () {
+  location.replace('../play.html' + (location.search || ''));
+})();
+</script>
+</head>
+<body><div>正在进入单词闯关…<br><a href="../play.html">没跳转就点这里</a></div></body>
+</html>

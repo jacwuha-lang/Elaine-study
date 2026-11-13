@@ -1,0 +1,80 @@
+/* ================= 竖屏字母键盘（共用） =================
+   主应用（css/arcade.css 的 .arc-stage）和独立调试页（arcade/arcade.css 的 #stage）
+   都会挂这块键盘，所以样式单独一份，两边 <link> 同一文件。
+   挂载 / 卸载逻辑在 keypad.js。 */
+
+/* 挂了键盘的容器改成竖排：画布在上，键盘在下 */
+.has-keys {
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px;
+}
+.has-keys > canvas { flex: 0 0 auto !important; }
+
+.arc-keys {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  gap: 5px;
+  width: 100%;
+  max-width: 560px;
+  padding: 0 6px 4px;
+  box-sizing: border-box;
+  touch-action: manipulation;
+}
+
+.arc-key {
+  flex: 0 0 auto;
+  width: calc((100% - 30px) / 7);   /* 7 列，每行 6 道 5px 缝；最后一行 5 键自然居中 */
+  /* 屏幕越高键越高：手机竖屏约 54px，iPad 竖屏顶到 64px，矮屏兜底 46px */
+  height: clamp(46px, 6.4vh, 64px);
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  border: 1px solid #3f6f5e;
+  border-radius: 9px;
+  background: linear-gradient(#1b2f28, #12211c);
+  color: #dff0e6;
+  font: 600 19px/1 "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif;
+  letter-spacing: 0;
+  box-shadow: 0 2px 0 #0a1411, inset 0 1px 0 rgba(190, 230, 210, 0.12);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  cursor: pointer;
+  transition: transform 0.05s ease, background 0.08s ease, color 0.08s ease;
+}
+
+.arc-key:active,
+.arc-key.on {
+  transform: translateY(2px);
+  background: linear-gradient(#3a4a2c, #2a3520);
+  border-color: #ffe08a;
+  color: #fff3cf;
+  box-shadow: 0 0 0 1px #ffe08a, 0 0 12px rgba(255, 224, 138, 0.25);
+}
+
+.arc-key-bs {
+  color: #ffb4a2;
+  border-color: #6d4238;
+  background: linear-gradient(#2e211c, #221814);
+  font-size: 17px;
+}
+
+/* iPad 竖屏：屏幕大，键再放大一点，手指够得舒服 */
+@media (orientation: portrait) and (min-width: 640px) {
+  .arc-keys { max-width: 640px; gap: 7px; padding-bottom: 6px; }
+  .arc-key {
+    width: calc((100% - 42px) / 7);
+    font-size: 22px;
+    border-radius: 11px;
+  }
+}
+
+/* 矮一点的竖屏（老机型）：缝收窄，别把画面挤没 */
+@media (orientation: portrait) and (max-height: 620px) {
+  .arc-key { font-size: 17px; }
+  .arc-keys { gap: 4px; }
+}

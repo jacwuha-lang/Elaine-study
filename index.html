@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#FFF7F0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Elaine的学习中心</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23FFF7F0'/%3E%3Ccircle cx='50' cy='52' r='30' fill='%23FFBE5C'/%3E%3Ccircle cx='40' cy='48' r='5' fill='%233A2A22'/%3E%3Ccircle cx='60' cy='48' r='5' fill='%233A2A22'/%3E%3Cpath d='M42 62q8 8 16 0' stroke='%233A2A22' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<script>
+/* ------------------------------------------------------------
+   设备判定：在样式表之前执行，避免「先按手机排版、再跳成 iPad」。
+   命中任意一条就走 iPad 布局（<html class="ipad">）：
+     · 真 iPad（iPadOS 13+ 会伪装成 MacIntel，靠触点数识别）
+     · 网址带 ?ipad / #ipad，或页面名里有 ipad（index_ipad.html）
+     · 任何触屏设备，且短边 ≥ 640px（安卓平板、Surface 之类）
+   iPad 上还会标 .port / .land，横竖屏各用一套排版。
+   ------------------------------------------------------------ */
+(function () {
+  var ua = navigator.userAgent;
+  var hint = (location.search + location.hash + location.pathname).toLowerCase();
+  var touchPad = window.matchMedia && matchMedia('(pointer:coarse)').matches
+    && Math.min(screen.width, screen.height) >= 640;
+
+  function param(k) {
+    var m = new RegExp('[?&]' + k + '=([^&#]*)').exec(location.search + location.hash);
+    return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : '';
+  }
+
+  /* ----------------------------------------------------------
+     直达游戏（play.html / play-ipad.html 会带这些参数跳进来）
+       ?play=1        打开就进闯关，不显示首页
+       ?phone=1       强制手机布局（在 iPad 上调试手机版用）
+       ?ipad=1        强制平板布局（下面那段原有判定会认）
+       ?free=0        按正常规则扣 100⭐；默认 0 以外的值都当练习局
+       ?who=Elaine    用哪份档案，不写就用这台设备上次用的，
+                      再没有就默认 Elaine
+     ---------------------------------------------------------- */
+  var root = document.documentElement;
+  var play = param('play') && param('play') !== '0';
+  var forcePhone = param('phone') === '1' || param('mobile') === '1';
+
+  if (play) {
+    var saved = '';
+    try { saved = localStorage.getItem('sm_profile') || ''; } catch (e) { /* 隐私模式 */ }
+    var who = (param('who') || saved || 'Elaine').trim();
+    if (!saved || param('who')) {
+      try { localStorage.setItem('sm_profile', who); } catch (e) { /* ignore */ }
+    }
+    window.__SM_PLAY = { free: param('free') !== '0', who: who };
+    root.classList.add('play-boot');
+  } else {
+    window.__SM_PLAY = null;
+  }
+
+  var pad = /ipad/.test(ua)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    || /ipad/.test(hint)
+    || !!touchPad;
+  if (forcePhone) pad = false;
+
+  if (pad) root.classList.add('ipad');
+
+  function orient() {
+    if (!pad) return;
+    var land = window.innerWidth > window.innerHeight;
+    root.classList.toggle('land', land);
+    root.classList.toggle('port', !land);
+  }
+  orient();
+  window.addEventListener('resize', orient);
+  window.addEventListener('orientationchange', function () {
+    setTimeout(orient, 120);
+    setTimeout(orient, 400);   /* iOS 有时回调来得太早，再对一次 */
+  });
+})();
+</script>
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/arcade.css">
+<link rel="stylesheet" href="arcade/keypad.css">
+<link rel="stylesheet" href="arcade/tutorial.css">
+<!-- iPad 样式只在宽屏加载，手机上不下载 -->
+<link rel="stylesheet" href="css/ipad.css" media="(min-width:640px)">
+<style>
+/* 直达模式：首页先藏着，别让它闪一下才被游戏盖住 */
+html.play-boot #app { visibility: hidden; }
+#bootVail { display: none; }
+html.play-boot #bootVail {
+  display: flex; position: fixed; inset: 0; z-index: 40;
+  align-items: center; justify-content: center; flex-direction: column; gap: 14px;
+  background: #0a1014; color: #e8eef5;
+  font: 700 16px/1.5 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  letter-spacing: .06em;
+}
+#bootVail .bv-sword { font-size: 30px; animation: bvSwing 1.1s ease-in-out infinite; }
+#bootVail .bv-sub { font-size: 12px; font-weight: 600; color: #7d93a8; letter-spacing: .12em; }
+@keyframes bvSwing {
+  0%, 100% { transform: rotate(-14deg) translateY(0); }
+  50%      { transform: rotate(10deg) translateY(-4px); }
+}
+@media (prefers-reduced-motion: reduce) { #bootVail .bv-sword { animation: none; } }
+</style>
+</head>
+<body>
+<div class="phone">
+  <main id="app"></main>
+  <div class="toast" id="toast"></div>
+  <div class="combo" id="combo"></div>
+</div>
+<div id="bootVail">
+  <div class="bv-sword">⚔️</div>
+  <div>正在进入单词闯关…</div>
+  <div class="bv-sub">词表加载中</div>
+</div>
+
+<!-- 学习档案：必须在 core.js 之前同步取回，否则首屏读到的会是空数据。
+     取不到（没设名字 / 服务器没开）就退回 localStorage，不影响离线使用。 -->
+<script>
+(function () {
+  var name = '';
+  try { name = localStorage.getItem('sm_profile') || ''; } catch (e) { /* 隐私模式 */ }
+  window.__SM_PROFILE = name;
+  window.__SM_DATA = null;
+  if (!name) return;
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', '/api/profile?name=' + encodeURIComponent(name), false);
+    x.send(null);
+    var j = JSON.parse(x.responseText);
+    if (!j || !j.ok) throw new Error('bad');
+    window.__SM_DATA = j.data || {};
+  } catch (e) {
+    /* 服务器连不上就别假装有档案，老老实实用本机存储 */
+    window.__SM_PROFILE = '';
+    window.__SM_DATA = null;
+  }
+})();
+</script>
+
+<!-- 基础层 -->
+<script src="js/core.js"></script>
+<script src="js/voice.js"></script>
+<script src="js/mascot.js"></script>
+<script src="js/lexicon.js"></script>
+<script src="js/quiz.js"></script>
+<script src="js/memory.js"></script>
+
+<!-- 知识模块（每个模块自带讲解 + 出题器） -->
+<script src="js/modules/wh.js"></script>
+<script src="js/modules/s3.js"></script>
+<script src="js/modules/do.js"></script>
+<script src="js/modules/yesno.js"></script>
+<script src="js/modules/neg.js"></script>
+<script src="js/modules/imp.js"></script>
+<script src="js/modules/ans.js"></script>
+<!-- 词形变化与固定搭配（按新错题补的） -->
+<script src="js/modules/noun.js"></script>
+<script src="js/modules/hv.js"></script>
+<script src="js/modules/there.js"></script>
+<script src="js/modules/vform.js"></script>
+<script src="js/modules/prep.js"></script>
+<script src="js/modules/pron.js"></script>
+<!-- 现在进行时（卷子上出现两次：isn't sleeping / What are the elephants doing?） -->
+<script src="js/modules/prog.js"></script>
+<script src="js/modules/mix.js"></script>
+
+<!-- 主程序 -->
+<script src="arcade/keypad.js"></script>
+<script src="arcade/tutorial.js"></script>
+<script src="arcade/host.js"></script>
+<script src="js/arcade.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

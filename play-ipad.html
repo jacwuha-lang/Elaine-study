@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a1014">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="单词闯关">
+<title>单词闯关 · iPad</title>
+<style>
+  html, body { height: 100%; margin: 0; background: #0a1014; color: #e8eef5;
+    font: 700 16px/1.6 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    display: flex; align-items: center; justify-content: center; text-align: center; }
+  a { color: #ffbe5c; }
+</style>
+<script>
+/* ------------------------------------------------------------
+   iPad 直达入口。
+   和 play.html 的区别只有一处：带 ?ipad=1，强制走平板布局
+   （不等自动识别，安卓平板 / 横屏电脑上也一样）。
+   打开时如果竖着拿，游戏会提示「横过来更好按」，但不锁死方向。
+
+   ?who=Elaine2 换档案 · ?free=0 按正常规则扣星。
+   ------------------------------------------------------------ */
+(function () {
+  var q = location.search ? location.search.replace(/^\?/, '&') : '';
+  location.replace('index.html?play=1&ipad=1' + q);
+})();
+</script>
+</head>
+<body>
+  <div>正在进入单词闯关（iPad）…<br><a href="index.html?play=1&ipad=1">没跳转就点这里</a></div>
+</body>
+</html>

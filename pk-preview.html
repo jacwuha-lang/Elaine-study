@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>模型预览（临时）</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23FFF7F0'/%3E%3Cpath d='M28 68 L44 52' stroke='%23FFBE5C' stroke-width='10' stroke-linecap='round'/%3E%3Cpath d='M52 44 L72 24' stroke='%236FA8FF' stroke-width='10' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+  html,body{margin:0;height:100%;background:#bfe9ff;overflow:hidden}
+  #stage{position:fixed;inset:0}
+  canvas{display:block;width:100%;height:100%}
+  .motion-controls{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid #d7b975;border-radius:12px;background:#172b3ee8;color:#fff0cf;font:13px sans-serif;white-space:nowrap}
+  .motion-controls button{border:1px solid #a99874;border-radius:7px;padding:7px 12px;background:#2d4861;color:#fff0cf;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="c"></canvas></div>
+<script type="module">
+import { buildSoldier, poseSoldier, buildCastle, buildTree } from './js/pk/models.js';
+import { World } from './js/pk/scene.js';
+import * as THREE from './vendor/three.module.min.js';
+import { observeAction } from './js/pk/scene/unit-motion.js';
+import { startMotionPreview } from './js/pk/scene/motion-preview.js';
+
+const canvas = document.getElementById('c');
+const params = new URLSearchParams(location.search);
+const mode = params.get('m') || 'soldier';
+
+if (mode === 'motion') {
+  await startMotionPreview(new World(canvas));
+} else if (mode === 'battle' || mode === 'showcase') {
+  const world = new World(canvas);
+  world.environment.setOptions({ time: params.get('time') || 'noon', weather: params.get('weather') || 'clear' });
+  world.environment.frame(8);
+  window.__PK_PREVIEW = { world };
+  world.setSide(0);
+  world.focus = 0;
+  if (mode === 'showcase') {
+    world.updateCamera = () => {
+      world.focus = 0;
+      world.camera.position.set(0, 4.1, 11.7);
+      world.camera.lookAt(0, 2.1, 0);
+    };
+    for (let side = 0; side <= 1; side++) {
+      const dir = side === 0 ? -1 : 1;
+      world.addLocal(100 + side * 100, side, 4, dir * 1.6, .75, 'general');
+      const positions = [[2.8, .7], [4.0, .7], [5.1, .7], [2.7, -.7], [4, -.7], [5.2, -.7], [3.7, -1.9], [5.1, -1.9]];
+      positions.forEach(([x, z], i) => {
+        world.addLocal(110 + side * 100 + i, side, 1 + i % 3, dir * x, z,
+          ['charge', 'charge', 'charge', 'thrower', 'spearman', 'charge', 'archer', 'mage'][i]);
+      });
+    }
+  } else {
+  world.addLocal(101, 0, 2, -0.75, -0.65, 'charge');
+  world.addLocal(102, 0, 4, -1.15, 0.65, 'general');
+  world.addLocal(201, 1, 2, 0.65, 0.55, 'charge');
+  world.addLocal(202, 1, 1, 1.25, -0.7, 'archer');
+  world.units.get(101).stc = 1;
+  world.units.get(101).prog = 0.68;
+  world.units.get(201).stc = 4;
+  world.units.get(201).prog = 0.48;
+  }
+  world.time = 2;
+  world.updateCamera(10);
+
+  let last = performance.now();
+  let nextEffect = 0;
+  function battleFrame(now) {
+    if (window.__PK_PREVIEW.paused) { last = now; requestAnimationFrame(battleFrame); return; }
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    if (mode === 'battle') {
+      const phase = (world.time % 2) / 2;
+      const action = phase < .23 ? [1, phase / .23] : phase < .36 ? [7, (phase - .23) / .13] : [0, 0];
+      observeAction(world.units.get(101), action[0], action[1], world.time);
+      observeAction(world.units.get(102), phase < .45 ? 8 : 0, phase < .45 ? phase / .45 : 0, world.time);
+      observeAction(world.units.get(201), phase > .2 && phase < .475 ? 4 : 0, phase > .2 && phase < .475 ? (phase - .2) / .275 : 0, world.time);
+      observeAction(world.units.get(202), phase < .4 ? 9 : 0, phase < .4 ? phase / .4 : 0, world.time);
+    }
+    world.frame(dt);
+    if (mode === 'battle' && now >= nextEffect && world.time % 2 > .46) {
+      world.combatEvent({ k: 'hit', id: 201, attacker: 101, x: 0.65, l: 0.55 });
+      world.combatEvent({ k: 'aoehit', id: 202, attacker: 102, x: 1.25, l: -0.7, crit: 1 });
+      nextEffect = now + 1800;
+    }
+    requestAnimationFrame(battleFrame);
+  }
+  window.__READY = true;
+  requestAnimationFrame(battleFrame);
+} else {
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(1);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.12;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xbfe9ff);
+scene.add(new THREE.HemisphereLight(0xe4f2ff, 0xbeb580, 1.55));
+const sun = new THREE.DirectionalLight(0xffedca, 2.1); sun.position.set(-6, 16, 11); scene.add(sun);
+sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
+Object.assign(sun.shadow.camera, { left: -13, right: 13, top: 11, bottom: -11, near: .5, far: 48 });
+sun.shadow.normalBias = .035;
+const fill = new THREE.DirectionalLight(0xdcecff, .85); fill.position.set(9, 8, 12); scene.add(fill);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(60, 30),
+  new THREE.MeshLambertMaterial({ color: 0x9fdfa3 }));
+ground.rotation.x = -Math.PI / 2; scene.add(ground);
+ground.receiveShadow = true;
+
+const cam = new THREE.PerspectiveCamera(38, 1, 0.1, 200);
+let subjects = [];
+
+if (mode === 'soldier') {
+  const one = params.get('t');
+  if (one) {
+    const g = buildSoldier(Number(params.get('s') || 0), Number(one), params.get('kind') || 'charge');
+    g.position.set(0, 0, 0);
+    scene.add(g);
+    subjects.push(g);
+    const view = params.get('view') || 'side';
+    if (view === 'side') { cam.position.set(0, 1.0, 4.2); cam.lookAt(0, 0.92, 0); }
+    else if (view === 'front') { cam.position.set(4.2, 1.15, 0.6); cam.lookAt(0, 0.92, 0); }
+    else { cam.position.set(2.6, 1.6, 3.6); cam.lookAt(0, 0.9, 0); }
+  } else {
+    let i = 0;
+    for (let s = 0; s < 2; s++) {
+      for (let t = 1; t <= 3; t++) {
+        const g = buildSoldier(s, t);
+        g.position.set(-3.6 + i * 1.45, 0, 0);
+        scene.add(g);
+        subjects.push(g);
+        i++;
+      }
+    }
+    cam.position.set(0, 1.4, 8.4);
+    cam.lookAt(0, 0.9, 0);
+  }
+} else if (mode === 'lineup') {
+  const kinds = ['charge', 'charge', 'charge', 'archer', 'thrower', 'spearman', 'mage', 'general', 'general'];
+  const tiers = [1, 2, 3, 2, 2, 3, 3, 4, 4];
+  kinds.forEach((kind, i) => {
+    const g = buildSoldier(i === 8 ? 1 : 0, tiers[i], kind);
+    g.position.set(-6.4 + i * 1.6, 0, 0);
+    g.rotation.y = i === 8 ? Math.PI + .45 : -.45;
+    scene.add(g); subjects.push(g);
+  });
+  cam.position.set(0, 3.1, 14);
+  cam.lookAt(0, 1.15, 0);
+} else if (mode === 'poses') {
+  /* 一排不同动作，用来看关键帧对不对：走路 / 抬刀 / 劈下 / 跳劈空中 /
+     砸门抡下 / 格挡 / 闪避 / 挨打 */
+  const SET = [
+    ['walk', 0, 0], ['wind', 0.55, 0], ['wind', 0.98, 0], ['leap', 0.5, 0],
+    ['smash', 0.6, 0], ['block', 0.5, 0], ['dodge', 0.45, 0], ['hurt', 0.4, 0],
+  ];
+  const tier = Number(params.get('t') || 2);
+  SET.forEach((s, i) => {
+    const g = buildSoldier(Number(params.get('s') || 0), tier);
+    g.position.set(-6.3 + i * 1.8, 0, 0);
+    g.userData.__pose = [s[0], s[1], s[2]];
+    scene.add(g);
+    subjects.push(g);
+  });
+  cam.position.set(0, 1.5, 10.6);
+  cam.lookAt(0, 0.95, 0);
+} else if (mode === 'tune') {
+  /* 直接给 armR / foreR 赋值，用来看剑指哪儿（标定用） */
+  const g = buildSoldier(Number(params.get('s') || 0), Number(params.get('t') || 2));
+  scene.add(g);
+  subjects.push(g);
+  const a = Number(params.get('a') || 0);
+  const f = Number(params.get('f') || 0);
+  g.userData.rig.armR.rotation.z = a;
+  g.userData.rig.foreR.rotation.z = f;
+  g.userData.__freeze = true;
+  cam.position.set(0, 1.0, 4.2);
+  cam.lookAt(0, 0.92, 0);
+} else if (mode === 'castle') {
+  const c = buildCastle(Number(params.get('s') || 0), Number(params.get('lv') || 1));
+  c.rotation.y = 0; c.position.x = 0;
+  scene.add(c);
+  cam.position.set(7, 5.4, 10.5);
+  cam.lookAt(0, 3.2, 0);
+} else if (mode === 'tree') {
+  for (let i = 0; i < 5; i++) {
+    const t = buildTree(0.1 + i * 0.19);
+    t.position.set(-4 + i * 2, 0, 0);
+    scene.add(t);
+  }
+  cam.position.set(0, 2.4, 11);
+  cam.lookAt(0, 1.6, 0);
+} else {
+  const c = buildCastle(0); c.position.x = -8; scene.add(c);
+  const c2 = buildCastle(1); c2.position.x = 8; scene.add(c2);
+  for (let i = 0; i < 4; i++) {
+    const t = buildTree(Math.random());
+    t.position.set(-14 + i * 9, 0, 7.5);
+    scene.add(t);
+  }
+  cam.position.set(0, 9, 16);
+  cam.lookAt(0, 2, 0);
+}
+
+function size() {
+  renderer.setSize(window.innerWidth, window.innerHeight, false);
+  cam.aspect = window.innerWidth / window.innerHeight;
+  cam.updateProjectionMatrix();
+}
+size();
+window.addEventListener('resize', size);
+
+let t0 = performance.now();
+function loop(now) {
+  const t = (now - t0) / 1000;
+  const fixSt = params.get('pose');
+  const fixK = params.get('k');
+  const walking = params.get('walk') !== '0';
+  subjects.forEach((g, i) => {
+    if (g.userData.__freeze) return;
+    if (g.userData.__pose) {
+      poseSoldier(g, 0, g.userData.__pose[0], g.userData.__pose[1], t);
+    } else if (fixSt) {
+      /* 定格看一个动作：?pose=wind&k=0.9 */
+      poseSoldier(g, 0, fixSt, fixK === null ? 0.6 : Number(fixK), t);
+    } else {
+      poseSoldier(g, walking ? 1 : 0, 'walk', 0, t + i * 0.3);
+    }
+  });
+  renderer.render(scene, cam);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+window.__PK_PREVIEW = { scene, camera: cam, renderer, subjects };
+window.__READY = true;
+}
+</script>
+</body>
+</html>

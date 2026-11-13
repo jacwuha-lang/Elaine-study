@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#0a1014" />
+<title>单词闯关 · 独立调试页</title>
+<link rel="stylesheet" href="arcade.css" />
+<link rel="stylesheet" href="keypad.css" />
+  <link rel="stylesheet" href="tutorial.css" />
+</head>
+<body>
+  <!-- 独立页：直接打开就能玩，也用来单独调关卡。
+       主应用不开 iframe，它会把同样的脚本注入自己的容器里（见 host.js）。 -->
+  <div id="stage"><canvas id="game" width="480" height="270" tabindex="0" aria-label="单词闯关"></canvas></div>
+  <div id="hint">点字母拼词 · 1~4 放招式 · 空格闪避 · 回车大招 · 右边钱袋开商店</div>
+
+  <script src="keypad.js"></script>
+  <script src="tutorial.js"></script>
+  <script src="src/font.js"></script>
+  <script src="src/sprites.js"></script>
+  <script src="src/art-backgrounds.js"></script>
+  <script src="src/art-player.js"></script>
+  <script src="src/art-creatures.js"></script>
+  <script src="src/art.js"></script>
+  <script src="src/vocab_t1.js"></script>
+  <script src="src/vocab_t2.js"></script>
+  <script src="src/vocab_t3.js"></script>
+  <script src="src/vocab_t4.js"></script>
+  <script src="src/vocab_t5.js"></script>
+  <script src="src/vocab_t6.js"></script>
+  <script src="src/vocab_t7.js"></script>
+  <script src="src/vocab_t8.js"></script>
+  <script src="src/vocab.js"></script>
+  <script src="src/meta.js"></script>
+  <script src="src/lines.js"></script>
+  <script src="src/levels.js"></script>
+  <script src="src/word-system.js"></script>
+  <script src="src/ambient.js"></script>
+  <script src="src/skills.js"></script>
+  <script src="src/effects.js"></script>
+  <script src="src/world-renderer.js"></script>
+  <script src="src/hud-renderer.js"></script>
+  <script src="src/game.js"></script>
+  <script>
+    /* 独立调试：
+       ?arcade=1&tier=3  直接进无尽模式的第 3 档
+       ?bot=1            自动拼词（回归测试用）                        */
+    (function () {
+      var q = new URLSearchParams(location.search);
+      if (!q.get('arcade')) return;
+      var tier = Math.max(1, parseInt(q.get('tier') || '1', 10) || 1);
+      fetch('words.json').then(function (r) { return r.json(); }).then(function (j) {
+        var pool = j.words.filter(function (x) { return x.t === tier; })
+          .map(function (x) { return { w: x.w, m: x.m, p: x.p, tier: x.t }; });
+        /* 打乱后取 40 个，够这一档用（10 只怪 + BOSS 多打几刀） */
+        for (var i = pool.length - 1; i > 0; i--) {
+          var k = Math.floor(Math.random() * (i + 1)), t = pool[i]; pool[i] = pool[k]; pool[k] = t;
+        }
+        window.ARCADE.start({ tier: tier, words: pool.slice(0, 40) });
+        relayout();
+        /* ?tut=1 / ?tut=2：直接看新手教程第 N 页（演示与截图用） */
+        if (q.get('tut')) {
+          setTimeout(function () {
+            window.ArcadeTutorial.open(window.ARCADE, parseInt(q.get('tut'), 10) || 1);
+          }, 600);
+        }
+      }).catch(function (e) {
+        document.getElementById('hint').textContent = 'words.json 读不到：' + e;
+      });
+    })();
+
+    /* 跟主应用一样：竖屏把字母盘搬出画布，用 DOM 键盘 */
+    var stage = document.getElementById('stage');
+    var layTimer = null;
+    function relayout() {
+      if (!window.ARCADE) return;
+      var portrait = window.innerHeight > window.innerWidth * 1.05;
+      window.ARCADE.setLayout(portrait ? 'portrait' : 'land');
+      if (portrait) {
+        ArcadeKeypad.mount(stage,
+          function (ch) { window.ARCADE.kidLetter(ch); },
+          function () { window.ARCADE.kidBack(); });
+      } else {
+        ArcadeKeypad.unmount();
+      }
+      if (portrait) {
+        var r = stage.getBoundingClientRect();
+        window.ARCADE.setBox(r.width, Math.max(70, r.height - ArcadeKeypad.height()));
+        document.getElementById('hint').style.display = 'none';   /* 竖屏键盘占到底了，提示会压住它 */
+      } else {
+        window.ARCADE.setBox(null);   /* 交回给引擎自己按窗口算 */
+        document.getElementById('hint').style.display = '';
+        document.getElementById('hint').textContent = '点字母拼词 · 1~4 放招式 · 空格闪避 · 回车大招 · 右边钱袋开商店';
+      }
+    }
+    window.addEventListener('resize', function () {
+      if (layTimer) clearTimeout(layTimer);
+      layTimer = setTimeout(function () { layTimer = null; relayout(); }, 160);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+# 学习档案：孩子的进度和名字，只留在本机
+profiles/*.json
+
+# DeepSeek API Key 和本机运行缓存
+.cache/
+
+# 日志
+*.log
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+
+# 系统文件和编辑器备份
+.DS_Store
+*.bak
+*.bak_*
+
+# 私人错题照片，不是项目代码
+新错题/

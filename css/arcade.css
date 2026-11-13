@@ -1,0 +1,427 @@
+/* ============================================================
+   arcade.css — 单词闯关的外层壳
+   游戏画面是 480×270 的 canvas，这里只负责给它让位：
+   顶部状态条 + 居中舞台 + 弹出的结算面板。四套布局各一段。
+   ============================================================ */
+
+body.arc-lock { overflow: hidden; }
+
+/* ---------------- 全屏层 ---------------- */
+#arcadeLayer {
+  position: fixed; inset: 0; z-index: 900;
+  display: none;
+  flex-direction: column;
+  background: #0a1014;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
+           env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  box-sizing: border-box;
+}
+#arcadeLayer.on { display: flex; }
+
+.arc-top {
+  flex: 0 0 auto;
+  display: flex; align-items: center; gap: 8px;
+  height: 46px; padding: 0 10px;
+  background: rgba(10, 20, 26, 0.96);
+  border-bottom: 1px solid rgba(120, 180, 155, 0.18);
+}
+.arc-back {
+  width: 34px; height: 34px; flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(150, 200, 180, 0.22);
+  border-radius: 10px;
+  color: #cfe4d8; font-size: 15px; line-height: 1;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.arc-back:active { background: rgba(255, 255, 255, 0.14); }
+
+.arc-chip {
+  display: flex; align-items: center; gap: 4px;
+  height: 28px; padding: 0 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  font-size: 13px; color: #9fc4b2;
+  white-space: nowrap;
+}
+.arc-chip i { font-style: normal; font-size: 12px; opacity: 0.85; }
+.arc-chip b { color: #ffe9a8; font-size: 14px; font-variant-numeric: tabular-nums; }
+.arc-top .arc-chip:last-child { margin-left: auto; }
+
+.arc-stage {
+  flex: 1 1 auto;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 0;
+  background: radial-gradient(circle at 50% 45%, #14232a 0%, #0b1216 70%, #070b0e 100%);
+  overflow: hidden;
+}
+.arc-stage canvas {
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  max-width: 100%;
+  max-height: 100%;
+  box-shadow: 0 0 0 1px #24473c, 0 0 40px rgba(80, 160, 130, 0.10);
+}
+
+/* ---------------- 竖屏 DOM 键盘 ----------------
+   480 逻辑宽压到 390 后，画布里 26 个字母每键只剩 15px，手指点不准。
+   竖屏时画布不画字母盘（ARCADE.layout = 'portrait'），键盘在 arcade/keypad.css。 */
+.arc-stage.has-keys canvas { box-shadow: none; }
+
+.arc-tip {
+  flex: 0 0 auto;
+  height: 30px; line-height: 30px;
+  text-align: center;
+  font-size: 12px; letter-spacing: 1px;
+  color: #6f8f80;
+  background: rgba(10, 20, 26, 0.96);
+}
+.arc-tip.pop { animation: arcTip 0.32s ease; }
+@keyframes arcTip {
+  from { opacity: 0.35; transform: translateY(3px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------------- 弹层 ---------------- */
+.arc-sheet {
+  position: fixed; inset: 0; z-index: 950;
+  display: flex; align-items: center; justify-content: center;
+  padding: 18px;
+  background: rgba(6, 12, 16, 0.72);
+  backdrop-filter: blur(3px);
+  animation: arcFade 0.18s ease;
+}
+@keyframes arcFade { from { opacity: 0 } to { opacity: 1 } }
+
+.sheet-card {
+  width: 100%; max-width: 360px;
+  padding: 22px 20px 18px;
+  background: linear-gradient(180deg, #182830 0%, #101a20 100%);
+  border: 1px solid rgba(140, 200, 175, 0.20);
+  border-radius: 18px;
+  box-shadow: 0 21px 60px rgba(0, 0, 0, 0.55);
+  text-align: center;
+  color: #d8ece2;
+}
+.sheet-card h3 { margin: 0 0 4px; font-size: 19px; color: #ffe9a8; }
+.sheet-sub { margin: 0 0 14px; font-size: 12.5px; color: #7fa392; }
+
+.sheet-num {
+  display: inline-flex; align-items: baseline; gap: 6px;
+  margin-bottom: 14px;
+  padding: 8px 16px;
+  background: rgba(232, 196, 106, 0.10);
+  border: 1px solid rgba(232, 196, 106, 0.28);
+  border-radius: 12px;
+}
+.sheet-num b { font-size: 24px; color: #ffe9a8; font-variant-numeric: tabular-nums; }
+.sheet-num span { font-size: 12px; color: #b3a06a; }
+
+.sheet-list { list-style: none; margin: 0 0 18px; padding: 0; text-align: left; }
+.sheet-list li {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; margin-bottom: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  font-size: 12.5px; color: #a8c4b6;
+}
+.sheet-list i { font-style: normal; font-size: 13px; opacity: 0.9; }
+.sheet-list b { color: #ffe9a8; }
+
+.sheet-btns { display: flex; gap: 10px; }
+.sheet-btns button { flex: 1; height: 46px; border-radius: 12px; font-size: 15px; cursor: pointer; }
+.btn-main {
+  border: none;
+  background: linear-gradient(180deg, #ffd98a 0%, #e8b95c 100%);
+  color: #2a1e08; font-weight: 700;
+  box-shadow: 0 4px 0 #b88a34;
+}
+.btn-main:active { transform: translateY(2px); box-shadow: 0 2px 0 #b88a34; }
+/* 结算里「回首页」是直接塞进卡片的一颗按钮，没有 .sheet-btns 包着，
+   不给宽高就只有文字那么大一颗 */
+.sheet-card > .btn-main {
+  display: block; width: 100%; height: 50px;
+  border-radius: 13px; font-size: 16.5px; cursor: pointer;
+}
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(150, 200, 180, 0.24);
+  color: #a8c4b6;
+}
+
+/* 结算 */
+.result .res-emoji { font-size: 40px; line-height: 1; margin-bottom: 6px; }
+.res-stars {
+  display: flex; align-items: baseline; justify-content: center; gap: 6px;
+  margin: 10px 0 6px;
+}
+.res-stars b { font-size: 40px; color: #ffe9a8; font-variant-numeric: tabular-nums; }
+.res-stars span { font-size: 18px; }
+/* 练习局（/play 直达）：没有星数可报，挂个标记说明这局不算分 */
+.res-free {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  margin: 12px 0 6px;
+}
+.res-free b { font-size: 19px; color: #9fd8c0; letter-spacing: .06em; }
+.res-free span { font-size: 11.5px; color: #6f8f80; }
+.res-warn { margin: 0 0 8px; font-size: 11.5px; color: #d8a06a; }
+.res-grid {
+  display: flex; justify-content: space-around;
+  margin: 14px 0 18px;
+  padding: 12px 0;
+  border-top: 1px solid rgba(150, 200, 180, 0.12);
+  border-bottom: 1px solid rgba(150, 200, 180, 0.12);
+}
+.res-grid div { display: flex; flex-direction: column; gap: 3px; }
+.res-grid b { font-size: 19px; color: #cfe4d8; font-variant-numeric: tabular-nums; }
+.res-grid span { font-size: 11px; color: #6f8f80; }
+
+/* ---------------- 首页入口卡片 ---------------- */
+.arc-entry {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; margin-top: 12px; padding: 14px 16px;
+  background: linear-gradient(135deg, #1e3a34 0%, #16282a 100%);
+  border: 1px solid rgba(140, 200, 175, 0.24);
+  border-radius: 16px;
+  text-align: left; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s ease, box-shadow 0.12s;
+}
+.arc-entry:active { transform: scale(0.985); }
+.arc-entry.dim { opacity: 0.62; }
+.arc-entry-ico {
+  width: 42px; height: 42px; flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255, 233, 168, 0.10);
+  border-radius: 12px;
+  font-size: 21px;
+}
+.arc-entry-txt { flex: 1 1 auto; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.arc-entry-txt b { font-size: 15px; color: #ffe9a8; }
+.arc-entry-txt span {
+  font-size: 11.5px; color: #8aac9c;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.arc-entry-cost {
+  flex: 0 0 auto;
+  padding: 5px 10px;
+  background: rgba(232, 196, 106, 0.14);
+  border-radius: 10px;
+  font-size: 12.5px; color: #e8c46a; font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   四套布局
+   ============================================================ */
+
+/* 手机竖屏：舞台在上，下面留给拇指（后续放 DOM 键盘就是这块） */
+@media (orientation: portrait) and (max-width: 639px) {
+  .arc-top { height: 44px; padding: 0 8px; gap: 6px; }
+  .arc-chip { height: 26px; padding: 0 8px; font-size: 12px; }
+  .arc-chip b { font-size: 13px; }
+  .arc-stage { padding: 8px 0; }
+  .arc-stage canvas { box-shadow: none; }
+  .arc-tip { height: 26px; line-height: 26px; font-size: 11.5px; }
+}
+
+/* 手机横屏：画面尽量铺满，顶部条压薄 */
+@media (orientation: landscape) and (max-height: 480px) {
+  .arc-top { height: 36px; padding: 0 8px; gap: 6px; }
+  .arc-back { width: 28px; height: 28px; border-radius: 8px; font-size: 13px; }
+  .arc-chip { height: 24px; padding: 0 8px; font-size: 11.5px; }
+  .arc-chip b { font-size: 12.5px; }
+  .arc-stage { padding: 2px 0; }
+  .arc-tip { height: 22px; line-height: 22px; font-size: 10.5px; }
+}
+
+/* iPad 竖屏：舞台够大，给一点呼吸空间 */
+@media (orientation: portrait) and (min-width: 640px) {
+  .arc-top { height: 52px; padding: 0 18px; gap: 12px; }
+  .arc-chip { height: 32px; padding: 0 14px; font-size: 14px; }
+  .arc-chip b { font-size: 15px; }
+  .arc-stage { padding: 12px 16px; }
+  .arc-stage canvas { box-shadow: 0 0 0 1px #24473c, 0 0 60px rgba(80, 160, 130, 0.12); }
+  .arc-stage.has-keys canvas { box-shadow: none; }
+  .arc-tip { height: 34px; line-height: 34px; font-size: 13px; }
+}
+
+/* iPad 横屏：顶部条 + 舞台，左右留白 */
+@media (orientation: landscape) and (min-width: 900px) {
+  .arc-top { height: 54px; padding: 0 22px; gap: 14px; }
+  .arc-chip { height: 34px; padding: 0 16px; font-size: 14.5px; }
+  .arc-chip b { font-size: 16px; }
+  .arc-stage { padding: 16px 24px; }
+  .arc-tip { height: 34px; line-height: 34px; font-size: 13px; }
+}
+
+/* ---------------- 本局词单（结算） ---------------- */
+.res-words {
+  margin: 0 0 14px;
+  max-height: 26vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  text-align: left;
+  padding: 8px 11px;
+  background: rgba(255, 255, 255, 0.035);
+  border-radius: 12px;
+}
+.rw-row { display: flex; gap: 8px; padding: 5px 0; font-size: 12px; align-items: flex-start; }
+.rw-row + .rw-row { border-top: 1px solid rgba(150, 200, 180, 0.09); }
+.rw-lab { flex: 0 0 auto; white-space: nowrap; color: #9fc4ad; }
+.rw-lab b { margin-left: 4px; color: #ffe9a8; font-variant-numeric: tabular-nums; }
+.rw-txt { color: #8fb3a2; line-height: 1.45; word-break: break-word; }
+.rw-row.ok .rw-lab { color: #9fe8b6; }
+.rw-row.hint .rw-lab { color: #ffd98a; }
+.rw-row.skip .rw-lab { color: #c9a8ff; }
+.rw-row.miss .rw-lab { color: #ff9a7a; }
+.rw-row.skill .rw-lab { color: #8fb3ff; }
+/* 词后面的中文释义：压暗一档，不要抢英文 */
+.rw-txt i {
+  font-style: normal;
+  margin-left: 2px;
+  font-size: .88em;
+  color: rgba(143, 179, 162, 0.62);
+}
+
+/* 错词重拼入口 */
+.res-redo {
+  display: block;
+  width: 100%;
+  margin: 0 0 12px;
+  height: 44px;
+  border: 1px solid rgba(255, 233, 168, 0.32);
+  border-radius: 12px;
+  background: rgba(255, 233, 168, 0.08);
+  color: #ffe9a8;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.res-redo:active { background: rgba(255, 233, 168, 0.16); }
+
+/* ---------------- 错词重拼小练习 ---------------- */
+.pw-card { text-align: center; }
+.pw-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #8fb3a2;
+  letter-spacing: .08em;
+  margin-bottom: 14px;
+}
+.pw-top b { color: #ffe9a8; font-size: 13px; font-variant-numeric: tabular-nums; }
+.pw-cn {
+  font-size: 24px;
+  font-weight: 800;
+  color: #eaf6ee;
+  letter-spacing: .04em;
+  margin: 4px 0 16px;
+  min-height: 34px;
+  line-height: 1.35;
+}
+.pw-slots {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+  min-height: 36px;
+}
+.pw-slots i {
+  font-style: normal;
+  width: 26px;
+  height: 34px;
+  line-height: 34px;
+  border-bottom: 2px solid rgba(159, 196, 173, 0.38);
+  color: #6f8f80;
+  font-size: 20px;
+  font-weight: 800;
+  text-transform: lowercase;
+}
+.pw-slots i.on { color: #ffe9a8; border-bottom-color: #ffe9a8; }
+.pw-in {
+  width: 100%;
+  height: 52px;
+  border-radius: 13px;
+  border: 1px solid rgba(159, 196, 173, 0.28);
+  background: rgba(255, 255, 255, 0.05);
+  color: #eaf6ee;
+  font-family: inherit;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-align: center;
+  outline: none;
+  margin-bottom: 12px;
+}
+.pw-in:focus { border-color: rgba(255, 233, 168, 0.7); }
+.pw-in:disabled { color: #9fe8b6; }
+.pw-tip {
+  min-height: 40px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #9fc4ad;
+  margin-bottom: 14px;
+}
+.pw-note { font-size: 12.5px; color: #8fb3a2; line-height: 1.6; margin: 0 0 16px; }
+
+
+/* ============================================================
+   大屏（iPad 竖屏 / 横屏，700×700 以上）
+   画布里的字本身就跟着画布放大（iPad 横屏约 2.4 倍），
+   但外壳上这些 DOM 文本是按手机写的绝对字号，到 10 寸屏上就明显偏小了。
+   手机横屏 844×390 不会命中这一段。
+   ============================================================ */
+@media (min-width: 700px) and (min-height: 700px) {
+
+  /* 顶部状态条 */
+  .arc-top { height: 66px; padding: 0 22px; gap: 12px; }
+  .arc-back { width: 42px; height: 42px; font-size: 19px; border-radius: 12px; }
+  .arc-chip { height: 40px; padding: 0 18px; gap: 6px; font-size: 17px; border-radius: 20px; }
+  .arc-chip i { font-size: 15px; }
+  .arc-chip b { font-size: 20px; }
+
+  /* 画布下面那行提示 */
+  .arc-tip {
+    height: 46px; line-height: 46px;
+    font-size: 18px; letter-spacing: 1.5px;
+    color: #8fb3a2;
+  }
+
+  /* 弹层卡片：360 → 560 宽，字号整体抬一档 */
+  .arc-sheet { padding: 26px; }
+  .sheet-card { max-width: 560px; padding: 32px 30px 26px; border-radius: 22px; }
+  .sheet-card h3 { font-size: 27px; }
+  .sheet-sub { font-size: 16px; margin-bottom: 18px; }
+  .sheet-num { padding: 11px 22px; gap: 8px; border-radius: 14px; }
+  .sheet-num b { font-size: 34px; }
+  .sheet-num span { font-size: 15px; }
+  .sheet-list li { font-size: 16.5px; padding: 11px 14px; margin-bottom: 9px; border-radius: 12px; }
+  .sheet-list i { font-size: 18px; }
+  .sheet-btns { gap: 14px; }
+  .sheet-btns button { height: 60px; font-size: 20px; border-radius: 15px; }
+  .sheet-card > .btn-main { height: 60px; font-size: 20px; border-radius: 15px; }
+
+  /* 结算 */
+  .result .res-emoji { font-size: 54px; }
+  .res-stars { gap: 8px; margin: 14px 0 8px; }
+  .res-stars b { font-size: 54px; }
+  .res-stars span { font-size: 26px; }
+  .res-free { margin: 16px 0 8px; }
+  .res-free b { font-size: 26px; }
+  .res-free span { font-size: 15px; }
+  .res-warn { font-size: 15.5px; }
+  .res-grid { margin: 18px 0 22px; padding: 16px 0; }
+  .res-grid div { gap: 5px; }
+  .res-grid b { font-size: 32px; }
+  .res-grid span { font-size: 15px; }
+  .res-words { max-height: 30vh; padding: 12px 16px; border-radius: 14px; }
+  .rw-row { font-size: 16.5px; gap: 10px; padding: 8px 0; }
+  .rw-lab b { font-size: 17.5px; }
+}

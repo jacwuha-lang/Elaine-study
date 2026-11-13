@@ -1,0 +1,113 @@
+/* ================= 新手教程（主应用与调试页共用） =================
+   半透明板 + 高亮框 + 旁边的小字说明。
+   框的位置由 ArcadeTutorial 按画布缩放算好，这里只管长相。 */
+.arc-tut {
+  position: fixed; inset: 0; z-index: 980;
+  display: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.arc-tut.on { display: block; animation: tutFade 0.18s ease; }
+@keyframes tutFade { from { opacity: 0 } to { opacity: 1 } }
+
+.tut-mask { position: absolute; inset: 0; background: rgba(4, 10, 12, 0.58); }
+
+.tut-box {
+  position: absolute;
+  border: 2px solid rgba(255, 214, 120, 0.92);
+  border-radius: 8px;
+  background: rgba(255, 214, 120, 0.10);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 14px rgba(255, 214, 120, 0.32);
+  pointer-events: none;
+}
+
+.tut-tip {
+  position: absolute;
+  /* 贴右边的说明（place:left）可用宽度是负数，光有 max-width 会被压成「一字一行」。
+     先按内容撑开，再由 max-width 兜住上限 */
+  width: -webkit-max-content;
+  width: max-content;
+  max-width: 216px;
+  padding: 6px 9px;
+  background: rgba(14, 26, 24, 0.96);
+  border: 1px solid rgba(255, 214, 120, 0.35);
+  border-radius: 8px;
+  font-size: 11.5px; line-height: 1.45; color: #e6f2e8;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+.tut-tip.up { transform: translateY(-100%); }
+
+.tut-foot {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 16px 18px calc(16px + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, rgba(6, 12, 16, 0) 0%, rgba(6, 12, 16, 0.94) 46%);
+}
+.tut-skip {
+  background: none; border: none;
+  color: #8fb3a2; font-size: 13px;
+  padding: 10px 4px; cursor: pointer;
+}
+.tut-dots { display: flex; gap: 6px; }
+.tut-dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(160, 200, 180, 0.3); }
+.tut-dots i.on { background: #ffd98a; }
+.tut-next {
+  border: none; height: 42px; padding: 0 22px; border-radius: 12px;
+  background: linear-gradient(180deg, #ffd98a 0%, #e8b95c 100%);
+  color: #2a1e08; font-weight: 700; font-size: 14px; cursor: pointer;
+  box-shadow: 0 3px 0 #b88a34;
+}
+.tut-next:active { transform: translateY(2px); box-shadow: 0 1px 0 #b88a34; }
+
+body.tut-lock { overflow: hidden; }
+
+@media (max-width: 420px) {
+  .tut-tip { max-width: 186px; font-size: 11px; }
+  .tut-next { height: 40px; font-size: 13px; }
+}
+
+/* 商店页：框上打编号，说明统一放在底部说明卡 */
+.tut-num {
+  position: absolute;
+  width: 18px; height: 18px; line-height: 18px;
+  border-radius: 50%;
+  background: #e8b95c; color: #241a05;
+  font-size: 11px; font-weight: 700; font-style: normal;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+.tut-legend {
+  position: absolute; left: 14px; right: 14px; bottom: 74px;
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 10px 12px;
+  background: rgba(12, 22, 20, 0.94);
+  border: 1px solid rgba(255, 214, 120, 0.28);
+  border-radius: 12px;
+  pointer-events: none;
+}
+.tut-legend div { display: flex; gap: 8px; align-items: flex-start; }
+.tut-legend b {
+  flex: 0 0 18px; height: 18px; line-height: 18px;
+  border-radius: 50%;
+  background: #e8b95c; color: #241a05;
+  font-size: 11px; text-align: center;
+}
+.tut-legend span { font-size: 12px; line-height: 1.5; color: #e6f2e8; }
+@media (max-width: 420px) {
+  .tut-legend { bottom: 70px; padding: 8px 10px; }
+  .tut-legend span { font-size: 11.5px; }
+}
+
+/* iPad（700×700 以上）：说明文字同样按大屏抬一档，
+   编号尺寸要和 tutorial.js 里的 numSz=22 对齐 */
+@media (min-width: 700px) and (min-height: 700px) {
+  .tut-tip { max-width: 300px; padding: 8px 12px; font-size: 15px; border-radius: 10px; }
+  .tut-num { width: 22px; height: 22px; line-height: 22px; font-size: 13px; }
+  .tut-legend { bottom: 84px; padding: 12px 14px; gap: 8px; border-radius: 14px; }
+  .tut-legend b { flex: 0 0 22px; height: 22px; line-height: 22px; font-size: 13px; }
+  .tut-legend span { font-size: 15px; line-height: 1.5; }
+  .tut-skip { font-size: 16px; }
+  .tut-next { height: 52px; padding: 0 30px; font-size: 18px; border-radius: 14px; }
+  .tut-dots i { width: 9px; height: 9px; }
+}

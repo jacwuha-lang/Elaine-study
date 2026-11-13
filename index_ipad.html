@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>句子小魔法 · iPad</title>
+<style>
+  html,body{height:100%;margin:0;background:#FFF7F0;
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;}
+  body{display:flex;align-items:center;justify-content:center;color:#7C6F91;
+    font-size:15px;font-weight:600;}
+</style>
+<script>
+/* ------------------------------------------------------------
+   iPad 专用入口。
+   真正的页面还是 index.html，这里只负责带上 ?ipad 参数跳过去 ——
+   布局、脚本、样式全都只有一份，不会出现两边不同步。
+   在 iPad 上其实直接打开 index.html 就会自动识别，这个地址只是
+   一个「我不想靠自动识别，请给我平板版」的保险入口。
+   ------------------------------------------------------------ */
+location.replace('index.html?ipad=1' + (location.hash || ''));
+</script>
+</head>
+<body>
+正在打开 iPad 版…
+<p>如果没有自动跳转，<a href="index.html?ipad=1">点这里</a></p>
+</body>
+</html>

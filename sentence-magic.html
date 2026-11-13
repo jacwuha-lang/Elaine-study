@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#FFF7F0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>句子小魔法</title>
+<style>
+:root{
+  --bg:#FFF7F0;
+  --card:#FFFFFF;
+  --ink:#2E2440;
+  --ink2:#7C6F91;
+  --ink3:#B3A7C4;
+  --line:#F3EAF7;
+  --orange:#FF7A59;
+  --orange-d:#DE5230;
+  --blue:#4C8DFF;
+  --mint:#22C79A;
+  --yellow:#FFC93C;
+  --red:#FF6B81;
+  --purple:#A78BFA;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  background:#EFE3D8;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+}
+.phone{
+  position:relative;width:100%;max-width:420px;height:100%;
+  background:var(--bg);overflow:hidden;
+  display:flex;flex-direction:column;
+}
+@media (min-width:540px){
+  body{background:radial-gradient(900px 700px at 50% 0%,#FDF3EA 0%,#E8D8CB 55%,#DCC7B8 100%);}
+  .phone{
+    height:min(890px,95vh);border-radius:48px;
+    border:12px solid #241C2E;
+    box-shadow:0 50px 90px -25px rgba(46,36,64,.5), 0 0 0 1px rgba(255,255,255,.3) inset;
+  }
+  .phone::before{
+    content:'';position:absolute;top:9px;left:50%;transform:translateX(-50%);
+    width:104px;height:26px;background:#241C2E;border-radius:0 0 16px 16px;z-index:60;
+  }
+}
+#app{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;position:relative;}
+.screen{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;position:relative;}
+
+/* ---------- 顶栏 ---------- */
+.top{
+  flex:none;display:flex;align-items:center;gap:10px;
+  padding:calc(14px + env(safe-area-inset-top)) 18px 10px;
+}
+.icon-btn{
+  width:42px;height:42px;border-radius:15px;border:none;flex:none;
+  background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  box-shadow:0 3px 0 #EFE3EC, 0 6px 14px -6px rgba(46,36,64,.2);
+  transition:transform .08s,box-shadow .08s;
+}
+.icon-btn:active{transform:translateY(3px);box-shadow:0 0 0 #EFE3EC;}
+.icon-btn svg{width:20px;height:20px;stroke:var(--ink);stroke-width:2.6;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.top-title{flex:1;font-size:17px;font-weight:800;letter-spacing:-.2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pill{
+  display:flex;align-items:center;gap:5px;flex:none;
+  background:#fff;border-radius:999px;padding:8px 14px;
+  font-size:13.5px;font-weight:800;color:#C97B12;
+  box-shadow:0 3px 0 #F5E7D6;
+}
+
+/* ---------- 滚动 ---------- */
+.scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:0 18px 30px;-webkit-overflow-scrolling:touch;}
+.scroll::-webkit-scrollbar{width:0;}
+
+/* ---------- 首页 ---------- */
+.hello{padding:8px 2px 16px;}
+.hello h1{margin:0;font-size:27px;font-weight:900;letter-spacing:-.6px;line-height:1.25;}
+.hello h1 em{font-style:normal;color:var(--orange);}
+.hello p{margin:6px 0 0;font-size:13.5px;color:var(--ink2);font-weight:500;}
+
+.task{
+  position:relative;overflow:hidden;
+  border-radius:26px;padding:16px;margin-bottom:20px;
+  background:linear-gradient(150deg,#FFC85C 0%,#FF9A5C 55%,#FF7A59 100%);
+  box-shadow:0 6px 0 #E0603A, 0 16px 28px -14px rgba(224,96,58,.8);
+  display:flex;align-items:center;gap:14px;
+  cursor:pointer;border:none;width:100%;text-align:left;font-family:inherit;
+  transition:transform .09s,box-shadow .09s;
+}
+.task:active{transform:translateY(5px);box-shadow:0 1px 0 #E0603A;}
+.task::after{
+  content:'';position:absolute;right:-30px;top:-40px;width:130px;height:130px;
+  background:rgba(255,255,255,.16);border-radius:50%;
+}
+.task-mascot{flex:none;width:74px;height:74px;}
+.task-txt{flex:1;min-width:0;color:#fff;}
+.task-txt .k{font-size:11.5px;font-weight:800;opacity:.9;letter-spacing:1.5px;}
+.task-txt .v{font-size:20px;font-weight:900;margin:3px 0 4px;letter-spacing:-.3px;}
+.task-txt .d{font-size:12.5px;font-weight:600;opacity:.92;}
+.task-go{
+  flex:none;width:44px;height:44px;border-radius:50%;
+  background:rgba(255,255,255,.95);display:flex;align-items:center;justify-content:center;
+  box-shadow:0 3px 8px rgba(150,60,30,.25);
+}
+.task-go svg{width:20px;height:20px;stroke:#FF6B45;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+
+.sec{display:flex;align-items:baseline;justify-content:space-between;margin:0 2px 12px;}
+.sec span{font-size:16px;font-weight:900;letter-spacing:-.3px;}
+.sec small{font-size:12px;color:var(--ink3);font-weight:600;}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.mod{
+  position:relative;border:none;cursor:pointer;text-align:left;overflow:hidden;
+  border-radius:22px;padding:14px 13px 12px;font-family:inherit;color:#fff;
+  background:linear-gradient(160deg,var(--c1),var(--c2));
+  box-shadow:0 5px 0 var(--cd), 0 12px 22px -12px var(--cd);
+  transition:transform .09s,box-shadow .09s;
+  text-shadow:0 1px 2px rgba(0,0,0,.13);
+}
+.mod:active{transform:translateY(4px);box-shadow:0 1px 0 var(--cd);}
+.mod::after{
+  content:'';position:absolute;right:-24px;bottom:-30px;width:90px;height:90px;
+  background:rgba(255,255,255,.13);border-radius:50%;
+}
+.mod-ico{
+  width:40px;height:40px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+  font-size:20px;background:rgba(255,255,255,.26);margin-bottom:9px;
+  box-shadow:0 2px 0 rgba(0,0,0,.08) inset;
+}
+.mod-name{font-size:15px;font-weight:900;letter-spacing:-.2px;line-height:1.25;}
+.mod-sub{font-size:10.5px;font-weight:600;opacity:.82;margin-top:3px;height:14px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.mod-bar{height:6px;border-radius:99px;background:rgba(0,0,0,.13);overflow:hidden;margin-top:10px;position:relative;z-index:1;}
+.mod-bar i{display:block;height:100%;border-radius:99px;background:#fff;transition:width .5s cubic-bezier(.3,1,.4,1);}
+.mod-num{font-size:10px;font-weight:800;opacity:.9;margin-top:5px;position:relative;z-index:1;}
+
+/* ---------- 讲解页 ---------- */
+.lsn-head{padding:4px 2px 16px;}
+.lsn-head .tag{
+  display:inline-block;font-size:11px;font-weight:800;padding:5px 11px;border-radius:9px;
+  background:var(--c1);color:#fff;margin-bottom:10px;letter-spacing:.3px;
+}
+.lsn-head h2{margin:0 0 5px;font-size:23px;font-weight:900;letter-spacing:-.5px;}
+.lsn-head p{margin:0;font-size:13px;color:var(--ink2);font-weight:500;}
+
+.lcard{
+  background:#fff;border-radius:20px;padding:16px 15px;margin-bottom:11px;
+  box-shadow:0 3px 0 #F3EAF7, 0 10px 22px -16px rgba(46,36,64,.5);
+  border-top:4px solid var(--c1);
+}
+.lcard h3{margin:0 0 7px;font-size:15px;font-weight:900;letter-spacing:-.2px;}
+.lcard p{margin:0 0 10px;font-size:12.8px;line-height:1.7;color:var(--ink2);font-weight:500;}
+.eg{background:#FBF7FE;border-radius:12px;padding:9px 11px;margin-top:7px;}
+.eg .en{font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.55;word-break:break-word;}
+.eg .cn{font-size:11.5px;color:var(--ink3);margin-top:3px;line-height:1.5;font-weight:500;}
+
+/* ---------- 底部按钮 ---------- */
+.foot{
+  flex:none;padding:10px 18px calc(16px + env(safe-area-inset-bottom));
+  background:linear-gradient(to top,var(--bg) 60%,rgba(255,247,240,0));
+}
+.btn{
+  width:100%;height:56px;border:none;border-radius:20px;cursor:pointer;
+  font-family:inherit;font-size:17px;font-weight:900;color:#fff;letter-spacing:.6px;
+  background:linear-gradient(180deg,#FF8F6B,#FF6B45);
+  box-shadow:0 5px 0 #D9502F, 0 14px 24px -10px rgba(255,107,69,.75);
+  transition:transform .08s,box-shadow .08s,background .2s;
+}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #D9502F,0 4px 10px -6px rgba(255,107,69,.5);}
+.btn.ok{background:linear-gradient(180deg,#3FE0B0,#22C79A);box-shadow:0 5px 0 #12A87E,0 14px 24px -10px rgba(34,199,154,.7);}
+.btn.ok:active{box-shadow:0 1px 0 #12A87E;}
+.btn.ghost{background:#fff;color:var(--ink2);box-shadow:0 4px 0 #EFE3EC,0 10px 18px -12px rgba(46,36,64,.4);}
+.btn.ghost:active{box-shadow:0 1px 0 #EFE3EC;}
+.btn.sm{height:44px;font-size:15px;border-radius:16px;}
+.btn-row{display:flex;gap:10px;}
+.btn-row .btn{flex:1;}
+
+/* ---------- 练习页 ---------- */
+.dots{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 4px;}
+.dots i{
+  width:8px;height:8px;border-radius:50%;background:#F0E4EC;flex:none;
+  transition:background .3s,width .3s;
+}
+.dots i.done{background:var(--c1);}
+.dots i.now{background:var(--c1);width:24px;border-radius:99px;}
+.qbody{flex:1;min-height:0;overflow-y:auto;padding:8px 18px 12px;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;position:relative;}
+.qbody::before{
+  content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
+  background-image:radial-gradient(circle, rgba(255,122,89,.09) 1.4px, transparent 1.4px);
+  background-size:24px 24px;
+}
+.qbody > *{position:relative;z-index:1;}
+.qbody::-webkit-scrollbar{width:0;}
+
+.qcard{
+  background:#fff;border-radius:22px;padding:18px 16px;
+  box-shadow:0 4px 0 #F3EAF7, 0 14px 26px -18px rgba(46,36,64,.55);
+  animation:slideUp .32s cubic-bezier(.2,.9,.3,1);
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+.qinst{
+  display:inline-block;font-size:11px;font-weight:800;letter-spacing:.3px;
+  padding:5px 10px;border-radius:8px;background:var(--c1);color:#fff;margin-bottom:11px;
+}
+.qtext{font-size:20px;line-height:1.6;font-weight:700;color:var(--ink);word-break:break-word;letter-spacing:-.2px;}
+.blk{
+  display:inline-block;width:48px;height:1.05em;
+  border-bottom:3px solid var(--c1,currentColor);opacity:.75;
+  vertical-align:-4px;margin:0 3px;border-radius:2px;
+}
+
+/* 选项 */
+.opts{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+.opt{
+  display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;
+  background:#fff;border:none;border-radius:18px;
+  padding:14px 15px;font-family:inherit;font-size:16px;font-weight:700;color:var(--ink);
+  box-shadow:0 4px 0 #F0E6F5, 0 8px 16px -12px rgba(46,36,64,.5);
+  transition:transform .09s,box-shadow .09s,background .15s;
+}
+.opt:active{transform:translateY(4px);box-shadow:0 0 0 #F0E6F5;}
+.opt .k{
+  width:26px;height:26px;border-radius:9px;background:#F6EFFA;color:var(--ink3);
+  font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;flex:none;
+  transition:background .15s,color .15s;
+}
+.opt.right{background:#E8FBF4;box-shadow:0 4px 0 #B7EFDD;}
+.opt.right .k{background:var(--mint);color:#fff;}
+.opt.wrong{background:#FFEFF2;box-shadow:0 4px 0 #FFC9D2;}
+.opt.wrong .k{background:var(--red);color:#fff;}
+.opt.dim{opacity:.55;}
+.opt.shake{animation:shake .4s;}
+@keyframes shake{
+  0%,100%{transform:translateX(0);}
+  20%{transform:translateX(-7px);}40%{transform:translateX(7px);}
+  60%{transform:translateX(-4px);}80%{transform:translateX(4px);}
+}
+
+/* 输入 */
+.answrap{margin-top:14px;}
+.ansinput{
+  width:100%;border:none;border-radius:18px;
+  padding:16px 16px;font-size:17px;font-family:inherit;font-weight:700;color:var(--ink);
+  outline:none;background:#fff;
+  box-shadow:0 4px 0 #F0E6F5, 0 8px 16px -12px rgba(46,36,64,.5);
+  transition:box-shadow .15s;
+}
+.ansinput:focus{box-shadow:0 4px 0 var(--c1), 0 0 0 4px rgba(76,141,255,.13);}
+.ansinput:disabled{color:var(--ink);-webkit-text-fill-color:var(--ink);opacity:1;background:#FAF6FD;}
+.ansinput::placeholder{color:var(--ink3);font-weight:500;font-size:14px;}
+.hintline{margin-top:11px;display:flex;align-items:center;gap:9px;min-height:24px;}
+.hintbtn{
+  border:none;background:#FBF3FF;color:var(--purple);font-family:inherit;
+  font-size:12.5px;font-weight:800;padding:8px 14px;border-radius:11px;cursor:pointer;
+  box-shadow:0 3px 0 #EFE1F8;
+}
+.hintbtn:active{transform:translateY(3px);box-shadow:none;}
+.hinttxt{font-size:12px;color:var(--orange);font-weight:700;}
+
+/* 词块 */
+.slot{
+  margin-top:14px;min-height:66px;border-radius:18px;
+  padding:12px;display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;
+  background:#FBF5FE;box-shadow:0 0 0 3px #F3EAF7 inset;
+}
+.slot .ph{font-size:12.5px;color:var(--ink3);padding:8px 4px;font-weight:600;}
+.bank{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px;min-height:44px;}
+.tok{
+  border:none;background:#fff;border-radius:14px;
+  padding:11px 15px;font-family:inherit;font-size:15.5px;font-weight:800;color:var(--ink);
+  cursor:pointer;box-shadow:0 4px 0 #F0E6F5, 0 8px 14px -10px rgba(46,36,64,.4);
+  transition:transform .09s,box-shadow .09s,background .15s;
+}
+.tok:active{transform:translateY(4px);box-shadow:0 0 0 #F0E6F5;}
+.tok.on{background:var(--c1);color:#fff;box-shadow:0 4px 0 var(--cd);}
+
+/* 反馈弹层 */
+.sheet{
+  position:absolute;left:0;right:0;bottom:0;z-index:50;
+  background:#fff;border-radius:30px 30px 0 0;
+  padding:20px 20px calc(20px + env(safe-area-inset-bottom));
+  box-shadow:0 -10px 44px rgba(46,36,64,.2);
+  transform:translateY(115%);
+  transition:transform .36s cubic-bezier(.2,.95,.3,1.02);
+}
+.sheet.show{transform:none;}
+.sheet-grip{width:42px;height:5px;border-radius:99px;background:#EDE3F3;margin:0 auto 14px;}
+.sheet-head{display:flex;align-items:center;gap:11px;margin-bottom:10px;}
+.sheet-m{width:52px;height:52px;flex:none;}
+.sheet-t{flex:1;min-width:0;}
+.sheet-t b{display:block;font-size:18px;font-weight:900;letter-spacing:-.3px;}
+.sheet-t span{font-size:12.5px;font-weight:700;color:var(--ink3);}
+.sheet-t span.up{color:var(--mint);}
+.sheet-body{
+  background:#FAF6FD;border-radius:15px;padding:12px 13px;margin-bottom:14px;
+  font-size:13px;line-height:1.7;color:var(--ink2);font-weight:500;
+}
+.sheet-body .ans{
+  font-size:15px;font-weight:800;color:var(--ink);line-height:1.5;
+  padding-bottom:9px;margin-bottom:9px;border-bottom:1.5px dashed #EADDF2;
+}
+.sheet-body .ans em{font-style:normal;font-size:10.5px;font-weight:800;color:var(--ink3);display:block;margin-bottom:3px;letter-spacing:.4px;}
+
+/* 贴底小抄 */
+.cheat{margin-top:auto;padding-top:18px;flex:none;}
+.cheat-in{
+  background:#FBF3FF;border-radius:16px;padding:12px 14px;
+  font-size:12px;line-height:1.65;color:var(--ink2);font-weight:500;
+}
+.cheat-in b{color:var(--c1);font-weight:800;display:block;margin-bottom:3px;font-size:11.5px;letter-spacing:.2px;}
+
+/* ---------- 结果页 ---------- */
+.res{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;padding:24px 22px 8px;overflow-y:auto;}
+.res::-webkit-scrollbar{width:0;}
+.res-mascot{width:110px;height:110px;animation:bounceIn .6s cubic-bezier(.2,1.6,.4,1);}
+@keyframes bounceIn{0%{transform:scale(.3);opacity:0;}60%{transform:scale(1.1);}100%{transform:scale(1);opacity:1;}}
+.res h2{margin:10px 0 4px;font-size:24px;font-weight:900;letter-spacing:-.4px;text-align:center;}
+.res .sub{font-size:13px;color:var(--ink2);font-weight:600;margin:0 0 20px;}
+.res-stats{display:flex;gap:10px;width:100%;margin-bottom:16px;}
+.stat{
+  flex:1;background:#fff;border-radius:18px;padding:14px 6px;text-align:center;
+  box-shadow:0 4px 0 #F3EAF7;
+}
+.stat b{display:block;font-size:23px;font-weight:900;line-height:1.15;}
+.stat span{font-size:10.5px;color:var(--ink3);font-weight:700;}
+.res-wrong{width:100%;margin-bottom:6px;}
+.rw{
+  background:#fff;border-radius:14px;padding:11px 13px;margin-bottom:8px;
+  box-shadow:0 3px 0 #F3EAF7;border-left:4px solid var(--red);
+}
+.rw .a{font-size:12.5px;font-weight:600;color:var(--ink2);line-height:1.5;}
+.rw .b{font-size:12.5px;font-weight:800;color:var(--mint);margin-top:4px;line-height:1.5;}
+.rw-title{font-size:12.5px;font-weight:800;color:var(--ink3);margin:6px 2px 9px;}
+
+/* 撒花 */
+.spark{position:fixed;width:9px;height:9px;border-radius:50%;pointer-events:none;z-index:999;}
+
+.toast{
+  position:absolute;left:50%;bottom:120px;transform:translateX(-50%) translateY(12px);
+  background:rgba(46,36,64,.94);color:#fff;font-size:13px;font-weight:700;
+  padding:11px 20px;border-radius:14px;opacity:0;pointer-events:none;transition:.26s;z-index:99;
+  white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+.combo{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(.5);
+  font-size:34px;font-weight:900;color:var(--orange);opacity:0;pointer-events:none;z-index:80;
+  text-shadow:0 4px 0 #fff,0 6px 14px rgba(255,122,89,.5);
+}
+.combo.pop{animation:comboPop .9s cubic-bezier(.2,1.5,.4,1);}
+@keyframes comboPop{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.4) rotate(-8deg);}
+  30%{opacity:1;transform:translate(-50%,-50%) scale(1.15) rotate(3deg);}
+  70%{opacity:1;transform:translate(-50%,-60%) scale(1);}
+  100%{opacity:0;transform:translate(-50%,-90%) scale(.9);}
+}
+</style>
+</head>
+<body>
+<div class="phone">
+  <main id="app"></main>
+  <div class="toast" id="toast"></div>
+  <div class="combo" id="combo"></div>
+</div>
+
+<script>
+/* ============================================================
+   题库：8 关 / 229 题
+   每次练习从题库中抽 10 题（错题优先），避免死记答案
+   ============================================================ */
+function QC(q,o,a,tip){ return {t:'c', q:q, o:o.split('|'), a:a, tip:tip}; }
+function QI(q,a,tip,s){ return {t:'i', q:q, a:(typeof a==='string'?[a]:a), tip:tip, s:s?1:0}; }
+function QB(q,tok,a,tip){ return {t:'b', q:q, tok:tok.split('|'), a:(typeof a==='string'?[a]:a), tip:tip}; }
+
+const MODULES = [
+{
+  id:'wh', name:'特殊疑问词', sub:'what / when / where / whose', ico:'🔍',
+  c1:'#5B9BFF', c2:'#3D7BF0', cd:'#2A5CC4',
+  L:[
+    {h:'what 问“什么”', b:'问东西、事情、职业，都用 what。',
+      e:[['What is your name?','你叫什么名字？'],['What are these?','这些是什么？'],['What does your father do?','你爸爸做什么工作？']]},
+    {h:'when 问“什么时候”', b:'问时间点、日期、星期，用 when。',
+      e:[['When do you get up?','你什么时候起床？'],['When is your birthday?','你的生日是什么时候？']]},
+    {h:'where 问“在哪里”', b:'问地点、位置，用 where。',
+      e:[['Where is my pen?','我的钢笔在哪里？'],['Where are you from?','你来自哪里？']]},
+    {h:'which 问“哪一个”', b:'在一定范围里挑选，用 which，常和 one 连用。',
+      e:[['Which one do you like?','你喜欢哪一个？'],['Which season do you like best?','你最喜欢哪个季节？']]},
+    {h:'whose 问“谁的”', b:'问东西属于谁，用 whose，后面直接跟名词。',
+      e:[['Whose bag is this?','这是谁的包？'],['Whose books are these?','这些是谁的书？']]},
+    {h:'how many / how much 问“多少”', b:'how many + 可数名词复数；how much + 不可数名词，也可以问价钱。',
+      e:[['How many books do you have?','你有几本书？'],['How much water is there?','有多少水？'],['How much is it?','多少钱？']]},
+    {h:'how 问“怎样”', b:'问方式、状态、程度，用 how，还有很多固定搭配。',
+      e:[['How do you go to school?','你怎么去上学？'],['How is the weather?','天气怎么样？'],['How old are you?','你几岁了？']]}
+  ],
+  Q:[
+    QC("— ___ is your English teacher?\n— Mr. Green.",'Who|What|Whose|Where',0,'答语是一个人，问“谁”用 who。'),
+    QC("— ___ is your birthday?\n— It\'s in May.",'When|Where|What|Which',0,'答语 in May 是时间，问时间用 when。'),
+    QC("— ___ are you from?\n— I\'m from China.",'Where|When|Who|How',0,'from China 是地点，问地点用 where。'),
+    QC("— ___ skirt do you like, the red one or the blue one?\n— The red one.",'Which|What|Whose|How',0,'在两个或多个里面挑一个，用 which。'),
+    QC("— ___ pencil is this?\n— It\'s Amy\'s.",'Whose|Who|Which|What',0,'问东西属于谁，用 whose。'),
+    QC("— ___ apples are there on the table?\n— Six.",'How many|How much|How old|How',0,'apples 是可数名词复数，用 how many。'),
+    QC("— ___ milk is there in the glass?\n— A little.",'How much|How many|How|What',0,'milk 是不可数名词，用 how much。'),
+    QC("— ___ do you spell your name?\n— J-A-C-K.",'How|What|Who|Where',0,'问“怎样、如何”用 how。'),
+    QC("— ___ is the weather today?\n— It\'s sunny.",'How|What|Where|When',0,'问天气怎么样用 How is the weather?'),
+    QC("— ___ does your mother do?\n— She is a nurse.",'What|Who|How|Which',0,'What does ... do? 是问职业的固定说法。'),
+    QC("— ___ is that boy?\n— He is my brother.",'Who|What|Where|How',0,'问人是谁用 who。'),
+    QC("— ___ are you doing?\n— I am reading.",'What|Who|Where|How',0,'问“在做什么”用 what。'),
+    QC("— ___ do you get up?\n— At six thirty.",'When|Where|What|How',0,'At six thirty 是时间，用 when。'),
+    QC("— ___ is my book?\n— It is on the desk.",'Where|When|What|Who',0,'on the desk 是地点，用 where。'),
+    QC("— ___ bag is this, yours or his?\n— It is mine.",'Whose|Which|What|Who',0,'问东西属于谁用 whose。'),
+    QC("— ___ books do you have?\n— Ten.",'How many|How much|How|Which',0,'books 可数，用 how many。'),
+    QC("— ___ is the book?\n— It is ten yuan.",'How much|How many|What|How',0,'问价钱用 how much。'),
+    QC("— ___ old are you?\n— I am nine.",'How|What|Who|Which',0,'问年龄用 How old。'),
+    QC("— ___ color is your bag?\n— It is blue.",'What|How|Which|Whose',0,'问颜色用 What color。'),
+    QC("— ___ one is your sister?\n— The girl in red.",'Which|Who|What|Whose',0,'在一定范围里选，用 which。'),
+    QC("— ___ is your father?\n— He is fine.",'How|What|Who|Where',0,'问“身体怎么样”用 how。'),
+    QC("— ___ time is it?\n— It is seven.",'What|How|When|Which',0,'问几点用 What time。'),
+    QC("— ___ do you go to school?\n— By bus.",'How|What|Where|When',0,'By bus 是方式，用 how。'),
+    QC("— ___ is the girl?\n— She is my cousin.",'Who|What|Which|Where',0,'问人是谁用 who。'),
+    QC("— ___ is your school?\n— It is near the park.",'Where|When|What|How',0,'问地点用 where。'),
+    QC("— ___ is your favourite fruit?\n— Apples.",'What|Which|Who|How',0,'问“什么”用 what。'),
+    QC("— ___ days are there in a week?\n— Seven.",'How many|How much|How|What',0,'days 可数，用 how many。'),
+    QC("— ___ water do you drink every day?\n— Two cups.",'How much|How many|How|What',0,'water 不可数，用 how much。'),
+    QI("根据答语填疑问词：\n— ___ is your bag?   — It is black.",['what color','what colour'],'问颜色用 What color。'),
+    QI("根据答语填疑问词：\n— ___ is your mother?   — She is a teacher.",'what','问职业用 what。')
+  ]
+},
+{
+  id:'s3', name:'第三人称单数', sub:'动词加 s / es', ico:'🔤',
+  c1:'#FFA05C', c2:'#FF7A3D', cd:'#D45A22',
+  L:[
+    {h:'什么时候用三单？', b:'主语是 he / she / it，或者一个人、一样东西（Tom、my mother、the cat），动词就要用三单形式。',
+      e:[['He plays football.','他踢足球。'],['My mother works in a hospital.','我妈妈在医院工作。']]},
+    {h:'规则① 一般直接加 s', b:'绝大部分动词直接加 s。',
+      e:[['play → plays','like → likes'],['read → reads','run → runs']]},
+    {h:'规则② 加 es', b:'以 s、x、sh、ch、o 结尾的动词，加 es。',
+      e:[['watch → watches','go → goes'],['do → does','wash → washes']]},
+    {h:'规则③ 变 y 为 i 再加 es', b:'辅音字母 + y 结尾，把 y 变成 i 再加 es。',
+      e:[['study → studies','fly → flies'],['play → plays','元音字母 + y，直接加 s']]},
+    {h:'特殊：have → has', b:'have 的三单形式是 has，要单独记住。',
+      e:[['She has a cat.','她有一只猫。'],['He has two sisters.','他有两个姐妹。']]},
+    {h:'三单的疑问和否定：请 does 帮忙', b:'变成疑问句或否定句时用 does，原来加了 s 的动词要“还原”成原形。',
+      e:[['Does he like apples?','✔ 不是 Does he likes apples?'],['He doesn\'t go to school.','✔ 不是 He doesn\'t goes to school.']]}
+  ],
+  Q:[
+    QC("My father ___ to work by bus.",'go|goes|going|went',1,'father 是三单，以 o 结尾加 es → goes。'),
+    QC("Lily ___ TV every evening.",'watch|watches|watchs|watching',1,'以 ch 结尾加 es → watches。'),
+    QC("Tom ___ his homework after school.",'do|does|dos|doing',1,'以 o 结尾加 es → does。'),
+    QC("My sister ___ English very much.",'study|studys|studies|studying',2,'辅音字母 + y，变 y 为 i 加 es → studies。'),
+    QC("She ___ a new bike.",'have|has|haves|having',1,'have 的三单是 has。'),
+    QC("— Does he ___ apples?\n— Yes, he does.",'like|likes|liking|liked',0,'Does 后面动词用原形。'),
+    QC("The boy ___ football every Sunday.",'play|plays|playes|playing',1,'一般情况直接加 s → plays。'),
+    QC("My mother ___ dinner every day.",'cook|cooks|cooking|cooked',1,'一般加 s → cooks。'),
+    QC("He ___ his teeth twice a day.",'brush|brushs|brushes|brushing',2,'以 sh 结尾加 es → brushes。'),
+    QC("The cat ___ fish.",'like|likes|liking|liked',1,'The cat 是三单，加 s → likes。'),
+    QC("Amy ___ to music after school.",'listen|listens|listening|listened',1,'一般加 s → listens。'),
+    QC("My brother ___ his room on Sundays.",'clean|cleans|cleaning|cleaned',1,'一般加 s → cleans。'),
+    QC("She ___ her homework in the evening.",'do|does|dos|doing',1,'以 o 结尾加 es → does。'),
+    QC("My uncle ___ in a hospital.",'work|works|working|worked',1,'一般加 s → works。'),
+    QC("Lucy ___ a lot of books.",'read|reads|reading|readed',1,'一般加 s → reads。'),
+    QC("The little boy ___ very fast.",'run|runs|runes|running',1,'一般加 s → runs。'),
+    QC("My grandma ___ flowers in the garden.",'water|waters|watering|watered',1,'一般加 s → waters。'),
+    QC("The dog ___ at night.",'bark|barks|barking|barked',1,'一般加 s → barks。'),
+    QC("My teacher ___ us English.",'teach|teachs|teaches|teaching',2,'以 ch 结尾加 es → teaches。'),
+    QC("She ___ up at six.",'get|gets|getes|getting',1,'一般加 s → gets。'),
+    QC("My cousin ___ in Beijing.",'live|lives|liveing|lived',1,'一般加 s → lives。'),
+    QC("The shop ___ at nine.",'open|opens|opening|opened',1,'一般加 s → opens。'),
+    QC("He ___ TV after dinner.",'watch|watchs|watches|watching',2,'以 ch 结尾加 es → watches。'),
+    QI("用所给词的正确形式填空：\nMy brother ___ (fly) kites in spring.",'flies','辅音字母 + y，变 y 为 i 加 es → flies。',1),
+    QI("用所给词的正确形式填空：\nThe little girl ___ (have) a red dress.",'has','have 的三单是 has。',1),
+    QI("用所给词的正确形式填空：\nHe ___ (go) to school by bike.",'goes','以 o 结尾加 es → goes。',1),
+    QI("用所给词的正确形式填空：\nShe ___ (study) Chinese every day.",'studies','辅音字母 + y → studies。',1),
+    QB("她骑自行车去上学。",'She|goes|to|school|by|bike','she goes to school by bike','主语 she 是三单，go 变 goes。'),
+    QB("我妈妈在医院工作。",'My|mother|works|in|a|hospital','my mother works in a hospital','my mother 是一个人，work 加 s。'),
+    QB("他每天晚饭后看电视。",'He|watches|TV|after|dinner|every|day','he watches tv after dinner every day','watch 以 ch 结尾加 es。')
+  ]
+},
+{
+  id:'do', name:'do / does', sub:'疑问、否定、回答', ico:'⚡',
+  c1:'#B39CFF', c2:'#9370F5', cd:'#6E4BC9',
+  L:[
+    {h:'do 和 does 怎么选？', b:'主语是 I / you / we / they 或复数 → 用 do；主语是 he / she / it 或单数 → 用 does。',
+      e:[['Do you like music?','你喜欢音乐吗？'],['Does she like music?','她喜欢音乐吗？']]},
+    {h:'疑问句：Do / Does 放句首', b:'后面跟主语，再接动词原形。',
+      e:[['Do they play football?','他们踢足球吗？'],['Does Tom have a dog?','汤姆有狗吗？']]},
+    {h:'否定句：don\'t / doesn\'t', b:'放在主语后面、动词前面，动词用原形。',
+      e:[['I don\'t like milk.','我不喜欢牛奶。'],['She doesn\'t like milk.','她不喜欢牛奶。']]},
+    {h:'怎么回答？', b:'用 do / does 问，就用 do / does 答。',
+      e:[['— Do you like it? — Yes, I do. / No, I don\'t.',''],['— Does he like it? — Yes, he does. / No, he doesn\'t.','']]},
+    {h:'最容易犯的错', b:'does 后面又用了三单形式，这是最常见的错误。',
+      e:[['Does he like apples?','✔ 不能写成 likes'],['He doesn\'t go.','✔ 不能写成 goes']]}
+  ],
+  Q:[
+    QC("___ you like ice cream?",'Do|Does|Is|Are',0,'主语 you，用 Do。'),
+    QC("___ your brother play basketball?",'Do|Does|Is|Are',1,'your brother 是一个人，用 Does。'),
+    QC("— Does she have a cat?\n— Yes, she ___.",'do|does|is|has',1,'用 Does 问，就用 does 答。'),
+    QC("They ___ go to school on Sunday.",'don\'t|doesn\'t|aren\'t|not',0,'主语 they 是复数，用 don\'t。'),
+    QC("He ___ like milk.",'don\'t|doesn\'t|isn\'t|not',1,'主语 he 是三单，用 doesn\'t。'),
+    QC("___ they live in Shanghai?",'Do|Does|Are|Is',0,'主语 they，用 Do。'),
+    QC("___ it eat fish?",'Do|Does|Are|Is',1,'主语 it 是三单，用 Does。'),
+    QC("— Do you like apples?\n— No, I ___.",'do|don\'t|does|doesn\'t',1,'用 Do 问，就用 don\'t 否定回答。'),
+    QC("My parents ___ watch TV at night.",'don\'t|doesn\'t|aren\'t|not',0,'parents 是复数，用 don\'t。'),
+    QC("___ Amy and Tom go to the same school?",'Do|Does|Are|Is',0,'两个人是复数，用 Do。'),
+    QC("___ your dog like bones?",'Do|Does|Are|Is',1,'your dog 是三单，用 Does。'),
+    QC("She ___ have any brothers.",'don\'t|doesn\'t|isn\'t|not',1,'she 是三单，用 doesn\'t。'),
+    QC("— Does he play football?\n— Yes, he ___.",'do|does|is|plays',1,'用 Does 问，用 does 答。'),
+    QC("We ___ go to school on Saturdays.",'don\'t|doesn\'t|aren\'t|not',0,'we 用 don\'t。'),
+    QC("___ your father drive a car?",'Do|Does|Are|Is',1,'your father 是三单，用 Does。'),
+    QC("I ___ like vegetables.",'don\'t|doesn\'t|am not|not',0,'I 用 don\'t。'),
+    QC("___ the students like their teacher?",'Do|Does|Are|Is',0,'students 复数，用 Do。'),
+    QC("He ___ do his homework at school.",'don\'t|doesn\'t|isn\'t|not',1,'he 三单，用 doesn\'t。'),
+    QC("— Do they like music?\n— Yes, they ___.",'do|does|are|is',0,'用 Do 问，用 do 答。'),
+    QC("___ your mother cook well?",'Do|Does|Are|Is',1,'your mother 三单，用 Does。'),
+    QC("Tom ___ like apples.",'don\'t|doesn\'t|isn\'t|not',1,'Tom 三单，用 doesn\'t。'),
+    QC("It ___ rain much here.",'don\'t|doesn\'t|isn\'t|not',1,'it 三单，用 doesn\'t。'),
+    QC("___ you want some water?",'Do|Does|Are|Is',0,'you 用 Do。'),
+    QC("— Does Lily like reading?\n— No, she ___.",'don\'t|doesn\'t|isn\'t|not',1,'用 Does 问，否定答 doesn\'t。'),
+    QB("He likes music.",'Does|he|like|music','does he like music','三单主语用 Does，likes 还原成 like。'),
+    QB("They play football.",'They|don\'t|play|football','they do not play football','复数主语用 don\'t，动词用原形。'),
+    QI("改成一般疑问句：\nI go to school by bus.",'do you go to school by bus','主语 I 变 you，句首加 Do。'),
+    QI("改成否定句：\nShe likes apples.",'she does not like apples','三单用 does not，likes 还原成 like。')
+  ]
+},
+{
+  id:'yesno', name:'一般疑问句', sub:'Be / can / do 提前', ico:'🤔',
+  c1:'#4FD3DA', c2:'#22B8C4', cd:'#0E8C99',
+  L:[
+    {h:'什么是一般疑问句？', b:'能用 Yes / No 回答的疑问句，就叫一般疑问句。',
+      e:[['Is she a teacher?','— Yes, she is.']]},
+    {h:'第①种：有 be 动词', b:'把 am / is / are 提到主语前面，其余不变。',
+      e:[['She is a doctor. → Is she a doctor?',''],['They are students. → Are they students?','']]},
+    {h:'第②种：有情态动词', b:'把 can / must / should 提到主语前面。',
+      e:[['He can swim. → Can he swim?','']]},
+    {h:'第③种：实义动词', b:'句首加 Do 或 Does，原来的动词变回原形。',
+      e:[['You like apples. → Do you like apples?',''],['She likes apples. → Does she like apples?','']]},
+    {h:'人称要跟着换', b:'把 I / my / we / our 改成 you / your。',
+      e:[['I am a student. → Are you a student?',''],['My name is Tom. → Is your name Tom?','']]},
+    {h:'怎么回答', b:'Yes / No + 主语 + 对应的 be 动词 / 情态动词 / do。',
+      e:[['— Is he your brother? — Yes, he is.',''],['— Does she like it? — No, she doesn\'t.','']]}
+  ],
+  Q:[
+    QB("She is a teacher.",'Is|she|a|teacher','is she a teacher','有 be 动词，把 is 提到句首。'),
+    QB("They are playing football.",'Are|they|playing|football','are they playing football','把 are 提到句首，其余不变。'),
+    QB("He can swim.",'Can|he|swim','can he swim','情态动词 can 提到句首。'),
+    QB("She likes apples.",'Does|she|like|apples','does she like apples','加 Does，likes 还原成 like。'),
+    QB("Tom has a dog.",'Does|Tom|have|a|dog','does tom have a dog','has 要还原成 have。'),
+    QB("He is reading a book.",'Is|he|reading|a|book','is he reading a book','be 动词 is 提前。'),
+    QB("She can dance.",'Can|she|dance','can she dance','can 提前。'),
+    QB("They like music.",'Do|they|like|music','do they like music','复数主语，加 Do。'),
+    QB("It is a cat.",'Is|it|a|cat','is it a cat','is 提前。'),
+    QB("The boys are playing basketball.",'Are|the|boys|playing|basketball','are the boys playing basketball','are 提前。'),
+    QB("The cat is under the chair.",'Is|the|cat|under|the|chair','is the cat under the chair','is 提前。'),
+    QB("We can play the piano.",'Can|we|play|the|piano','can we play the piano','can 提前。'),
+    QB("My sister likes dancing.",'Does|my|sister|like|dancing','does my sister like dancing','加 Does，likes 还原。'),
+    QI("改成一般疑问句：\nMy mother goes to work by car.",'does your mother go to work by car','my 变 your，加 Does，goes 还原成 go。'),
+    QI("改成一般疑问句：\nI am a student.",'are you a student','I am → Are you。'),
+    QI("改成一般疑问句：\nMy name is Tom.",'is your name tom','my 变 your，is 提前。'),
+    QI("改成一般疑问句：\nWe are in Class Two.",'are you in class two','we 变 you，are 提前。'),
+    QI("改成一般疑问句：\nMy father works in a hospital.",'does your father work in a hospital','my 变 your，加 Does，works 还原。'),
+    QI("改成一般疑问句：\nHe goes to school by bike.",'does he go to school by bike','加 Does，goes 还原成 go。'),
+    QI("改成一般疑问句：\nThey are in the classroom.",'are they in the classroom','are 提前。'),
+    QC("— Is he your brother?",'Yes, he is.|Yes, he does.|Yes, he is not.|No, he is.',0,'用 is 问，就用 is 答。'),
+    QC("— Can she swim?",'Yes, she can.|Yes, she does.|Yes, she is.|No, she can.',0,'用 can 问，就用 can 答。'),
+    QC("— Does he like it?",'No, he doesn\'t.|No, he don\'t.|No, he isn\'t.|No, he not.',0,'用 Does 问，用 doesn\'t 答。'),
+    QC("— Are they students?",'Yes, they are.|Yes, they do.|Yes, they is.|No, they are.',0,'用 are 问，就用 are 答。'),
+    QC("— Do you like apples?",'No, I don\'t.|No, I doesn\'t.|No, I am not.|No, I not.',0,'用 Do 问，用 don\'t 答。'),
+    QC("把 “She is a doctor.” 改成一般疑问句，正确的是：",'Is she a doctor?|Does she a doctor?|She is a doctor?|Is she doctor?',0,'有 be 动词，直接提前。'),
+    QC("把 “He likes music.” 改成一般疑问句，正确的是：",'Does he like music?|Does he likes music?|Do he like music?|He likes music?',0,'加 Does，动词还原。'),
+    QC("把 “They can swim.” 改成一般疑问句，正确的是：",'Can they swim?|Do they can swim?|Can they swims?|They can swim?',0,'情态动词直接提前。'),
+    QC("把 “I am a student.” 改成一般疑问句，正确的是：",'Are you a student?|Am I a student?|Are I a student?|Do you a student?',0,'I am → Are you。')
+  ]
+},
+{
+  id:'neg', name:'否定句', sub:'not / don\'t / doesn\'t', ico:'🚫',
+  c1:'#FF8FA3', c2:'#F2607C', cd:'#C93E58',
+  L:[
+    {h:'有 be 动词：后面加 not', b:'is not = isn\'t，are not = aren\'t，am not 一般不缩写。',
+      e:[['He is happy. → He is not happy.',''],['We are students. → We aren\'t students.','']]},
+    {h:'有情态动词：后面加 not', b:'can not = can\'t。',
+      e:[['They can sing. → They can\'t sing.','']]},
+    {h:'实义动词：加 don\'t / doesn\'t', b:'放在动词前面，动词用原形。',
+      e:[['I like apples. → I don\'t like apples.',''],['She goes to school. → She doesn\'t go to school.','']]},
+    {h:'some 要变 any', b:'否定句和疑问句里，some 通常变成 any。',
+      e:[['I have some books. → I don\'t have any books.','']]},
+    {h:'and 常常变 or', b:'并列的 and 在否定句中常改成 or。',
+      e:[['I like apples and pears. → I don\'t like apples or pears.','']]}
+  ],
+  Q:[
+    QB("He is happy.",'He|is|not|happy','he is not happy','be 动词后面直接加 not。'),
+    QB("I like apples.",'I|do|not|like|apples','i do not like apples','实义动词前面加 do not。'),
+    QB("She goes to school by bus.",'She|does|not|go|to|school|by|bus','she does not go to school by bus','三单用 does not，goes 还原成 go。'),
+    QB("They can sing.",'They|can|not|sing','they can not sing','can 后面加 not。'),
+    QB("We are students.",'We|are|not|students','we are not students','are 后面加 not。'),
+    QB("Tom plays football.",'Tom|does|not|play|football','tom does not play football','三单用 does not，plays 还原。'),
+    QB("My parents watch TV.",'My|parents|do|not|watch|TV','my parents do not watch tv','复数主语用 do not。'),
+    QB("The cat is black.",'The|cat|is|not|black','the cat is not black','is 后面加 not。'),
+    QB("He can ride a bike.",'He|can|not|ride|a|bike','he can not ride a bike','can 后面加 not。'),
+    QB("I have some books.",'I|do|not|have|any|books','i do not have any books','否定句里 some 要变成 any。'),
+    QB("She has a brother.",'She|does|not|have|a|brother','she does not have a brother','has 要还原成 have。'),
+    QC("My brother ___ like vegetables.",'don\'t|doesn\'t|not|isn\'t',1,'my brother 是三单，用 doesn\'t。'),
+    QC("They ___ like fish.",'don\'t|doesn\'t|aren\'t|not',0,'they 是复数，用 don\'t。'),
+    QC("She ___ a doctor.",'isn\'t|don\'t|doesn\'t|not',0,'有 be 动词，用 isn\'t。'),
+    QC("I ___ have any pens.",'don\'t|doesn\'t|am not|not',0,'I 用 don\'t。'),
+    QC("He ___ play computer games.",'don\'t|doesn\'t|isn\'t|not',1,'he 三单，用 doesn\'t。'),
+    QC("把 “She likes milk.” 改成否定句，正确的是：",'She doesn\'t like milk.|She don\'t like milk.|She doesn\'t likes milk.|She not likes milk.',0,'三单用 doesn\'t，动词还原。'),
+    QC("把 “They can swim.” 改成否定句，正确的是：",'They can\'t swim.|They don\'t can swim.|They can\'t swims.|They not can swim.',0,'can 后面加 not。'),
+    QC("把 “It is a dog.” 改成否定句，正确的是：",'It isn\'t a dog.|It doesn\'t a dog.|It don\'t a dog.|It not is a dog.',0,'is 后面加 not。'),
+    QC("否定句里，some 通常变成：",'any|some|a|much',0,'否定句和疑问句里 some 常变 any。'),
+    QI("改成否定句：\nShe likes milk.",'she does not like milk','三单用 does not，likes 还原。'),
+    QI("改成否定句：\nThey can swim.",'they can not swim','can 后面加 not。'),
+    QI("改成否定句：\nIt is a dog.",'it is not a dog','is 后面加 not。'),
+    QI("改成否定句：\nI go to school by bike.",'i do not go to school by bike','I 用 do not。'),
+    QI("改成否定句：\nHe plays the piano.",'he does not play the piano','三单用 does not，plays 还原。'),
+    QI("改成否定句：\nWe are in Class Two.",'we are not in class two','are 后面加 not。'),
+    QI("改成否定句：\nThe boys play football.",'the boys do not play football','复数主语用 do not。'),
+    QC("把 “I like apples and pears.” 改成否定句，正确的是：",'I don\'t like apples or pears.|I don\'t like apples and pears.|I not like apples and pears.|I doesn\'t like apples or pears.',0,'否定句里 and 常变 or。')
+  ]
+},
+{
+  id:'imp', name:'祈使句', sub:'动词原形开头 / Don\'t', ico:'👉',
+  c1:'#5FDCB0', c2:'#22C79A', cd:'#0F9A75',
+  L:[
+    {h:'什么是祈使句？', b:'表示命令、请求、建议的句子。主语 you 通常不写出来，动词用原形开头。',
+      e:[['Open the door.','打开门。'],['Sit down, please.','请坐下。']]},
+    {h:'否定祈使句：Don\'t + 动词原形', b:'在动词前面加 Don\'t（= Do not）。',
+      e:[['Don\'t run in the classroom.','不要在教室里跑。'],['Don\'t be late.','不要迟到。']]},
+    {h:'be 动词的祈使句', b:'用 Be 开头，否定用 Don\'t be。',
+      e:[['Be careful!','小心！'],['Don\'t be sad.','别难过。']]},
+    {h:'please 让语气更礼貌', b:'please 可以放句首，也可以放句尾（前面加逗号）。',
+      e:[['Please come in.','请进。'],['Close the window, please.','请关上窗户。']]},
+    {h:'Let\'s 也是祈使句', b:'Let\'s = Let us，表示“我们一起……吧”。',
+      e:[['Let\'s go to the park.','我们去公园吧。']]}
+  ],
+  Q:[
+    QC("___ the door, please.",'Open|Opens|Opening|Opened',0,'祈使句用动词原形开头。'),
+    QC("___ run in the classroom.",'Not|Don\'t|Doesn\'t|No',1,'否定祈使句用 Don\'t + 动词原形。'),
+    QC("___ careful! The floor is wet.",'Be|Are|Do|Is',0,'be 动词的祈使句用 Be。'),
+    QC("___ go to the park!",'Let\'s|Lets|Let is|Let',0,'Let\'s = Let us，别漏掉撇号。'),
+    QC("___ late for school.",'Don\'t be|Not be|Don\'t|Not',0,'否定祈使句 + be：Don\'t be late.'),
+    QC("___ quiet, please.",'Be|Are|Do|Is',0,'祈使句的 be 动词用 Be。'),
+    QC("___ talk in the library.",'Don\'t|Not|Doesn\'t|No',0,'否定祈使句用 Don\'t。'),
+    QC("___ your homework first.",'Do|Does|Doing|Did',0,'祈使句用动词原形。'),
+    QC("___ forget your umbrella.",'Don\'t|Not|Doesn\'t|No',0,'否定祈使句用 Don\'t。'),
+    QC("___ sit down.",'Please|Pleases|Pleased|Pleasing',0,'please 放句首让语气更礼貌。'),
+    QC("把 “You close the door.” 改成祈使句：",'Close the door.|You close the door.|Closes the door.|Closing the door.',0,'去掉 you，动词原形开头。'),
+    QC("把 “You don\'t talk in class.” 改成祈使句：",'Don\'t talk in class.|Not talk in class.|You don\'t talk in class.|Doesn\'t talk in class.',0,'去掉 you，用 Don\'t + 动词原形。'),
+    QC("祈使句通常省略的主语是：",'you|I|he|they',0,'祈使句的主语 you 通常不写出来。'),
+    QC("“Don\'t be sad.” 的意思是：",'别难过|不要坐着|不是悲伤|没有悲伤',0,'Don\'t be + 形容词，表示“不要……”。'),
+    QC("下面哪句是祈使句？",'Sit down, please.|He sits down.|She is sitting.|They sat down.',0,'动词原形开头、省略主语的是祈使句。'),
+    QI("改成否定祈使句：\nYou talk in class.",'don\'t talk in class','去掉 you，用 Don\'t + 动词原形。'),
+    QI("改成否定祈使句：\nYou are late for class.",'don\'t be late for class','be 动词的否定祈使句用 Don\'t be。'),
+    QI("改成祈使句：\nYou open the window.",'open the window','去掉 you，动词原形开头。'),
+    QI("改成否定祈使句：\nYou run in the hallway.",'don\'t run in the hallway','用 Don\'t + 动词原形。'),
+    QI("改成祈使句：\nYou are careful.",'be careful','祈使句的 be 动词用 Be。'),
+    QB("请打开你的书。",'Open|your|books|please','open your books please','祈使句动词原形开头。'),
+    QB("不要在这里跑。",'Don\'t|run|here','don\'t run here','否定祈使句用 Don\'t。'),
+    QB("我们一起回家吧。",'Let\'s|go|home','let us go home','Let\'s = Let us。'),
+    QB("请安静。",'Be|quiet|please','be quiet please','祈使句的 be 动词用 Be。'),
+    QB("不要在教室里吃东西。",'Don\'t|eat|in|the|classroom','don\'t eat in the classroom','否定祈使句用 Don\'t。')
+  ]
+},
+{
+  id:'ans', name:'问句怎么答', sub:'问什么就答什么', ico:'💬',
+  c1:'#FFC85C', c2:'#FFA726', cd:'#D17F0B',
+  L:[
+    {h:'特殊疑问句不能用 Yes / No 回答', b:'要针对疑问词来回答：问什么就答什么。',
+      e:[['— Where is he? — He is in the classroom.','问地点，答地点']]},
+    {h:'how many 用数字回答', b:'答语里通常有具体的数量。',
+      e:[['— How many pens do you have? — I have three.','']]},
+    {h:'how much 用数量或价钱回答', b:'问不可数名词的数量，或问价钱。',
+      e:[['— How much is it? — It\'s ten yuan.','']]},
+    {h:'whose 用 \'s 回答', b:'答语里用名词所有格。',
+      e:[['— Whose book is it? — It\'s Tom\'s.','']]},
+    {h:'回答的人称要和问句一致', b:'问 he 就答 he，问 you 就答 I。',
+      e:[['— What does your father do? — He is a doctor.','']]}
+  ],
+  Q:[
+    QC("— How many books do you have?",'I have five.|It is five yuan.|Yes, I do.|I am five.',0,'how many 问数量，答具体数字。'),
+    QC("— Where is the cat?",'It is under the chair.|It is Monday.|He is fine.|Yes, it is.',0,'where 问地点，答位置。'),
+    QC("— Whose bag is this?",'It is Lily\'s.|It is a bag.|Yes, it is.|It is on the desk.',0,'whose 问归属，答语用 \'s。'),
+    QC("— What does your father do?",'He is a doctor.|He is fine.|He is at home.|He is thirty.',0,'问职业，答职业。'),
+    QC("— How much is the book?",'It is ten yuan.|I have ten.|Yes, it is.|It is on the desk.',0,'how much 问价钱，答金额。'),
+    QC("— When do you have an English class?",'On Monday.|In the classroom.|Mr. Li.|It is English.',0,'when 问时间，答时间。'),
+    QC("— Which season do you like best?",'I like spring best.|Yes, I do.|It is spring.|Because it is warm.',0,'which 问哪一个，要答具体那一个。'),
+    QC("— How do you go to school?",'By bike.|At seven.|It is near.|With Tom.',0,'how 问方式，答出行方式。'),
+    QC("— Who is that man?",'He is my uncle.|It is a man.|Yes, he is.|He is fine.',0,'who 问人，答是谁。'),
+    QC("— What time is it?",'It is seven.|It is Monday.|It is sunny.|It is red.',0,'what time 问几点，答时间。'),
+    QC("— Why are you happy?",'Because I have a new toy.|Yes, I am.|I am nine.|It is a toy.',0,'why 问原因，用 because 回答。'),
+    QC("— How old are you?",'I am nine.|I am fine.|It is nine.|Yes, I am.',0,'how old 问年龄。'),
+    QC("— What color is it?",'It is red.|It is a pen.|Yes, it is.|It is on the desk.',0,'what color 问颜色。'),
+    QC("— Where are you from?",'I am from China.|I am nine.|Yes, I am.|It is China.',0,'where 问地点。'),
+    QC("— How is the weather?",'It is sunny.|It is Monday.|Yes, it is.|I am fine.',0,'问天气答天气状况。'),
+    QC("— How many pens do you have?",'I have three.|It is three yuan.|Yes, I do.|I am three.',0,'how many 答数量。'),
+    QC("— Whose pencil is this?",'It is Mike\'s.|It is a pencil.|Yes, it is.|It is in my bag.',0,'whose 答归属。'),
+    QC("— What is your name?",'My name is Lily.|I am fine.|It is a name.|Yes, it is.',0,'what 问名字。'),
+    QC("— When is your birthday?",'It is in May.|It is on the desk.|Yes, it is.|I am ten.',0,'when 问时间。'),
+    QC("— Which one do you want?",'The red one.|Yes, I do.|It is red.|Because it is nice.',0,'which 答具体那一个。'),
+    QC("— What are you doing?",'I am reading.|I am nine.|It is a book.|Yes, I am.',0,'问在做什么，答正在做的事。'),
+    QC("— How much water is there?",'A little.|Five.|Yes, there is.|It is water.',0,'how much 问不可数名词的量。'),
+    QC("— Where is my pen?",'It is on the desk.|It is Monday.|Yes, it is.|It is a pen.',0,'where 答地点。'),
+    QC("— Who is she?",'She is my sister.|It is a girl.|Yes, she is.|She is fine.',0,'who 问人。'),
+    QC("— How do you spell it?",'B-O-O-K.|It is a book.|Yes, I do.|It is blue.',0,'how 问方式，答拼写。'),
+    QC("— What does she like?",'She likes music.|She is fine.|Yes, she does.|It is music.',0,'what 问喜欢什么。'),
+    QC("— Does she like music?\n— ___",'Yes, she does.|Yes, she is.|Yes, she likes.|Yes, she do.',0,'用 Does 问，用 does 答。'),
+    QC("— Are they in the classroom?\n— ___",'Yes, they are.|Yes, they do.|Yes, they is.|Yes, they be.',0,'用 Are 问，用 are 答。')
+  ]
+},
+{
+  id:'mix', name:'综合闯关', sub:'所有题型混着考', ico:'🏆',
+  c1:'#FF9EC8', c2:'#FF6FA5', cd:'#D63F7C',
+  L:[
+    {h:'闯关说明', b:'这里把前面 7 关的题混在一起。做错没关系，看清楚讲解再来一次，错题会自动多出现几次。',
+      e:[['Be brave!','勇敢一点，错了也是在学。']]}
+  ],
+  Q:[
+    QC("— ___ is your new bag?\n— It is black.",'What color|How|Where|Who',0,'问颜色用 What color。'),
+    QB("Her sister likes dancing.",'Does|her|sister|like|dancing','does her sister like dancing','三单用 Does，likes 还原。'),
+    QI("改成否定句：\nHe can play the piano.",'he can not play the piano','can 后面加 not。'),
+    QC("How many ___ are there in the box?",'apple|apples|an apple|applees',1,'how many 后接可数名词复数。'),
+    QI("改成一般疑问句：\nWe are in Class Two.",'are you in class two','we 变 you，are 提前。'),
+    QC("Don't ___ in the library.",'talk|talks|talking|talked',0,'祈使句用动词原形。'),
+    QC("— Whose pencil is this?",'It is Mike\'s.|It is a pencil.|Yes, it is.|It is in my bag.',0,'whose 答归属。'),
+    QI("改成否定句：\nTom does his homework at school.",'tom does not do his homework at school','does 是实义动词，否定要加 does not，后面还原成 do。'),
+    QC("— ___ do you go to Beijing?\n— By train.",'How|What|When|Where',0,'by train 是方式，用 how。'),
+    QB("The boys are playing basketball.",'Are|the|boys|playing|basketball','are the boys playing basketball','are 提前。'),
+    QI("改成否定祈使句：\nYou are late for class.",'don\'t be late for class','be 的否定祈使句用 Don\'t be。'),
+    QC("— ___ water is there in the bottle?\n— Only a little.",'How much|How many|How|What',0,'water 不可数，用 how much。'),
+    QB("My father goes to work by car.",'Does|my|father|go|to|work|by|car','does my father go to work by car','加 Does，goes 还原成 go。'),
+    QC("She ___ her homework every day.",'do|does|dos|doing',1,'以 o 结尾加 es → does。'),
+    QC("— ___ is your birthday?\n— It is on May 1st.",'When|Where|What|Who',0,'问时间用 when。'),
+    QI("改成一般疑问句：\nShe has a new bike.",'does she have a new bike','has 还原成 have。'),
+    QC("— Is she a nurse?",'Yes, she is.|Yes, she does.|Yes, she is not.|No, she is.',0,'用 is 问，用 is 答。'),
+    QB("I like apples and pears.",'I|do|not|like|apples|or|pears','i do not like apples or pears','否定句里 and 常变 or。'),
+    QC("___ careful when you cross the road.",'Be|Are|Do|Is',0,'祈使句的 be 动词用 Be。'),
+    QC("— ___ is that girl?\n— She is my sister.",'Who|What|Which|Where',0,'问人用 who。'),
+    QI("改成否定句：\nThey like playing football.",'they do not like playing football','复数用 do not。'),
+    QC("— ___ are you crying?\n— Because I lost my toy.",'Why|When|Where|How',0,'why 问原因，用 because 答。'),
+    QB("Don't be late for school.",'Don\'t|be|late|for|school','don\'t be late for school','否定祈使句 + be。'),
+    QC("My mother ___ TV in the evening.",'watch|watchs|watches|watching',2,'以 ch 结尾加 es。'),
+    QI("改成一般疑问句：\nThe cat is on the sofa.",'is the cat on the sofa','is 提前。'),
+    QC("— ___ books are these?\n— They are mine.",'Whose|Who|Which|What',0,'问归属用 whose。'),
+    QC("— ___ do you get to school?\n— On foot.",'How|What|When|Where',0,'on foot 是方式。'),
+    QB("She can sing very well.",'Can|she|sing|very|well','can she sing very well','can 提前。'),
+    QI("改成否定句：\nI have some toys.",'i do not have any toys','some 变 any。'),
+    QC("— ___ is your father?\n— He is a policeman.",'What|Who|How|Which',0,'问职业用 what。')
+  ]
+}
+];
+
+/* ============================================================
+   工具
+   ============================================================ */
+const CONTR = {
+  "what's":"what is","it's":"it is","that's":"that is","he's":"he is","she's":"she is",
+  "there's":"there is","who's":"who is","where's":"where is","here's":"here is",
+  "let's":"let us","i'm":"i am","you're":"you are","we're":"we are","they're":"they are",
+  "isn't":"is not","aren't":"are not","don't":"do not","doesn't":"does not","didn't":"did not",
+  "can't":"can not","cannot":"can not","won't":"will not","wasn't":"was not","weren't":"were not",
+  "i've":"i have","i'll":"i will","you'll":"you will","hasn't":"has not","haven't":"have not",
+  "isnt":"is not","arent":"are not","dont":"do not","doesnt":"does not","didnt":"did not",
+  "cant":"can not","wont":"will not","wasnt":"was not","werent":"were not","hasnt":"has not",
+  "havent":"have not","im":"i am","theyre":"they are","youre":"you are",
+  "lets":"let us","whats":"what is","thats":"that is"
+};
+
+function norm(s){
+  let t = String(s||'').toLowerCase().replace(/[\u2018\u2019`]/g,"'");
+  t = t.replace(/[^a-z0-9' ]+/g,' ');
+  const out = [];
+  t.split(/\s+/).forEach(function(w){
+    if(!w) return;
+    const r = CONTR[w];
+    if(r){ out.push.apply(out, r.split(' ')); } else { out.push(w); }
+  });
+  return out.join(' ').replace(/'/g,'');
+}
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function nl(s){
+  return esc(s).replace(/\n/g,'<br>').replace(/_{2,}/g,'<span class="blk"></span>');
+}
+function shuffle(a){
+  const r = a.slice();
+  for(let i=r.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=r[i]; r[i]=r[j]; r[j]=t; }
+  return r;
+}
+function load(k,d){ try{ const v=localStorage.getItem(k); return v===null?d:JSON.parse(v); }catch(e){ return d; } }
+function save(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+function pad(n){ return n<10?'0'+n:''+n; }
+
+/* ============================================================
+   音效 / 震动 / 特效
+   ============================================================ */
+let AC = null;
+function ac(){
+  if(!AC){
+    try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ AC = null; }
+  }
+  if(AC && AC.state === 'suspended'){ try{ AC.resume(); }catch(e){} }
+  return AC;
+}
+function tone(f, at, dur, type, vol){
+  const c = ac(); if(!c) return;
+  const t0 = c.currentTime + at;
+  const o = c.createOscillator(), g = c.createGain();
+  o.type = type || 'sine';
+  o.frequency.setValueAtTime(f, t0);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.linearRampToValueAtTime(vol || 0.14, t0 + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(c.destination);
+  o.start(t0); o.stop(t0 + dur + 0.03);
+}
+function sfxTap(){ tone(760, 0, 0.06, 'sine', 0.07); }
+function sfxOk(){
+  tone(523.25, 0, 0.13, 'triangle', 0.16);
+  tone(659.25, 0.085, 0.13, 'triangle', 0.16);
+  tone(783.99, 0.17, 0.24, 'triangle', 0.16);
+}
+function sfxNo(){
+  tone(311.13, 0, 0.15, 'sine', 0.15);
+  tone(233.08, 0.13, 0.26, 'sine', 0.15);
+}
+function sfxLevel(){
+  [523,659,784,1047].forEach(function(f,i){ tone(f, i*0.09, 0.22, 'triangle', 0.15); });
+}
+function buzz(p){ try{ navigator.vibrate && navigator.vibrate(p); }catch(e){} }
+
+function burst(x, y){
+  const colors = ['#FFC93C','#FF7A59','#4C8DFF','#22C79A','#A78BFA','#FF6B81'];
+  for(let i=0;i<16;i++){
+    const el = document.createElement('div');
+    el.className = 'spark';
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.style.background = colors[i % colors.length];
+    const sz = 6 + Math.random()*7;
+    el.style.width = sz+'px'; el.style.height = sz+'px';
+    document.body.appendChild(el);
+    const ang = Math.random()*Math.PI*2;
+    const dist = 70 + Math.random()*110;
+    const dx = Math.cos(ang)*dist, dy = Math.sin(ang)*dist - 40;
+    const anim = el.animate([
+      { transform:'translate(-50%,-50%) scale(1)', opacity:1 },
+      { transform:'translate(calc(-50% + '+dx+'px), calc(-50% + '+dy+'px)) scale(0.2)', opacity:0 }
+    ], { duration: 650 + Math.random()*450, easing:'cubic-bezier(.15,.75,.4,1)' });
+    anim.onfinish = function(){ el.remove(); };
+  }
+}
+
+/* ============================================================
+   吉祥物
+   ============================================================ */
+function mascot(mood, cls){
+  const mouths = {
+    happy:'M50 73 Q60 85 70 73',
+    cheer:'M46 70 Q60 92 74 70',
+    wow:'M56 76 Q60 84 64 76',
+    sad:'M51 80 Q60 71 69 80'
+  };
+  const eyes = (mood === 'cheer')
+    ? '<path d="M39 56 Q46 48 53 56" stroke="#3A2A22" stroke-width="3.4" fill="none" stroke-linecap="round"/>'
+      + '<path d="M67 56 Q74 48 81 56" stroke="#3A2A22" stroke-width="3.4" fill="none" stroke-linecap="round"/>'
+    : '<ellipse cx="46" cy="55" rx="7.5" ry="8.5" fill="#3A2A22"/>'
+      + '<ellipse cx="74" cy="55" rx="7.5" ry="8.5" fill="#3A2A22"/>'
+      + '<circle cx="48.6" cy="51.6" r="2.5" fill="#fff"/>'
+      + '<circle cx="76.6" cy="51.6" r="2.5" fill="#fff"/>';
+  return '<svg class="'+(cls||'')+'" viewBox="0 0 120 120" fill="none">'
+    + '<ellipse cx="60" cy="112" rx="26" ry="5" fill="#000" opacity=".07"/>'
+    + '<path d="M41 24 L33 5 L51 17 Z" fill="#FF9A2E"/>'
+    + '<path d="M79 24 L87 5 L69 17 Z" fill="#FF9A2E"/>'
+    + '<path d="M60 14 C31 14 18 38 18 61 C18 89 38 106 60 106 C82 106 102 89 102 61 C102 38 89 14 60 14 Z" fill="#FFBE5C"/>'
+    + '<path d="M60 14 C31 14 18 38 18 61 C18 74 22 84 29 91 C24 82 24 70 26 61 C30 38 44 24 60 24 C76 24 90 38 94 61 C96 70 96 82 91 91 C98 84 102 74 102 61 C102 38 89 14 60 14 Z" fill="#FFD07A" opacity=".55"/>'
+    + eyes
+    + '<ellipse cx="32" cy="69" rx="6.5" ry="4.5" fill="#FF8A8A" opacity=".5"/>'
+    + '<ellipse cx="88" cy="69" rx="6.5" ry="4.5" fill="#FF8A8A" opacity=".5"/>'
+    + '<path d="'+mouths[mood]+'" stroke="#3A2A22" stroke-width="3.4" fill="none" stroke-linecap="round"/>'
+    + '</svg>';
+}
+
+/* ============================================================
+   状态
+   ============================================================ */
+const state = {
+  screen:'home',
+  mod:null,
+  stars: load('sm_stars', 0),
+  best: load('sm_best', {}),
+  qstat: load('sm_q', {}),
+  session:null,
+  combo:0
+};
+
+const app = document.getElementById('app');
+const toastEl = document.getElementById('toast');
+const comboEl = document.getElementById('combo');
+let toastT = null;
+
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(function(){ toastEl.classList.remove('show'); }, 1700);
+}
+function showCombo(n){
+  comboEl.textContent = '连击 x' + n + ' 🔥';
+  comboEl.classList.remove('pop');
+  void comboEl.offsetWidth;
+  comboEl.classList.add('pop');
+}
+function findMod(id){ for(let i=0;i<MODULES.length;i++){ if(MODULES[i].id===id) return MODULES[i]; } return null; }
+
+/* ============================================================
+   抽题：错题优先
+   ============================================================ */
+function pickQuestions(mid, n){
+  const mod = findMod(mid);
+  const all = mod.Q.map(function(q,i){
+    const st = state.qstat[mid+'-'+i] || {w:0,c:0};
+    return { mid:mid, qi:i, q:q, w:st.w, c:st.c };
+  });
+  const wrong = shuffle(all.filter(function(x){ return x.w > 0; }));
+  const fresh = shuffle(all.filter(function(x){ return x.w === 0 && x.c === 0; }));
+  const done  = shuffle(all.filter(function(x){ return x.w === 0 && x.c > 0; }));
+  return wrong.concat(fresh, done).slice(0, Math.min(n, all.length));
+}
+function pickDaily(n){
+  let pool = [];
+  MODULES.forEach(function(m){ pool = pool.concat(pickQuestions(m.id, m.Q.length)); });
+  const wrong = shuffle(pool.filter(function(x){ return x.w > 0; }));
+  const fresh = shuffle(pool.filter(function(x){ return x.w === 0 && x.c === 0; }));
+  const done  = shuffle(pool.filter(function(x){ return x.w === 0 && x.c > 0; }));
+  return wrong.concat(fresh, done).slice(0, n);
+}
+function masteredCount(mid){
+  const mod = findMod(mid);
+  let n = 0;
+  for(let i=0;i<mod.Q.length;i++){
+    const st = state.qstat[mid+'-'+i];
+    if(st && st.c > 0) n++;
+  }
+  return n;
+}
+
+/* ============================================================
+   渲染入口
+   ============================================================ */
+function render(){
+  if(state.screen === 'home') return renderHome();
+  if(state.screen === 'lesson') return renderLesson();
+  if(state.screen === 'quiz') return renderQuiz();
+  if(state.screen === 'result') return renderResult();
+}
+
+/* ---------- 首页 ---------- */
+function renderHome(){
+  let cards = '';
+  MODULES.forEach(function(m){
+    const done = masteredCount(m.id);
+    const total = m.Q.length;
+    const pct = Math.round(done/total*100);
+    cards += '<button class="mod" data-mod="'+m.id+'" style="--c1:'+m.c1+';--c2:'+m.c2+';--cd:'+m.cd+'">'
+      +  '<div class="mod-ico">'+m.ico+'</div>'
+      +  '<div class="mod-name">'+esc(m.name)+'</div>'
+      +  '<div class="mod-sub">'+esc(m.sub)+'</div>'
+      +  '<div class="mod-bar"><i style="width:'+pct+'%"></i></div>'
+      +  '<div class="mod-num">已掌握 '+done+' / '+total+'</div>'
+      + '</button>';
+  });
+
+  const wrongTotal = (function(){
+    let n = 0;
+    Object.keys(state.qstat).forEach(function(k){ if(state.qstat[k].w > 0) n++; });
+    return n;
+  })();
+
+  app.innerHTML = '<div class="screen">'
+    + '<div class="top">'
+    +   '<div class="top-title" style="font-size:13px;font-weight:800;color:var(--ink3);letter-spacing:2px">句子小魔法</div>'
+    +   '<div class="pill">⭐ <b>'+state.stars+'</b></div>'
+    + '</div>'
+    + '<div class="scroll">'
+    +   '<div class="hello">'
+    +     '<h1>今天也要<em>加油</em>哦</h1>'
+    +     '<p>'+(wrongTotal > 0 ? '有 '+wrongTotal+' 道题在等你复习' : '每次 10 道题，5 分钟就够')+'</p>'
+    +   '</div>'
+    +   '<button class="task" id="daily">'
+    +     mascot('happy','task-mascot')
+    +     '<div class="task-txt">'
+    +       '<div class="k">TODAY</div>'
+    +       '<div class="v">今日任务</div>'
+    +       '<div class="d">10 道小题 · 错题优先</div>'
+    +     '</div>'
+    +     '<div class="task-go"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></div>'
+    +   '</button>'
+    +   '<div class="sec"><span>知识地图</span><small>共 '+MODULES.reduce(function(a,m){return a+m.Q.length;},0)+' 道题</small></div>'
+    +   '<div class="grid">'+cards+'</div>'
+    +   '<div style="height:10px"></div>'
+    + '</div>'
+    + '</div>';
+
+  document.getElementById('daily').onclick = function(){ sfxTap(); startDaily(); };
+  app.querySelectorAll('.mod').forEach(function(el){
+    el.onclick = function(){ sfxTap(); openModule(el.dataset.mod); };
+  });
+}
+
+/* ---------- 讲解页 ---------- */
+function openModule(id){
+  state.mod = findMod(id);
+  state.screen = 'lesson';
+  render();
+}
+
+function renderLesson(){
+  const m = state.mod;
+  let body = '';
+  m.L.forEach(function(l){
+    let egs = '';
+    (l.e || []).forEach(function(e){
+      egs += '<div class="eg"><div class="en">'+esc(e[0])+'</div>'
+        + (e[1] ? '<div class="cn">'+esc(e[1])+'</div>' : '') + '</div>';
+    });
+    body += '<div class="lcard"><h3>'+esc(l.h)+'</h3><p>'+esc(l.b)+'</p>'+egs+'</div>';
+  });
+
+  app.innerHTML = '<div class="screen" style="--c1:'+m.c1+';--c2:'+m.c2+';--cd:'+m.cd+'">'
+    + '<div class="top">'
+    +   '<button class="icon-btn" id="back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>'
+    +   '<div class="top-title">知识点讲解</div>'
+    +   '<div class="pill">⭐ <b>'+state.stars+'</b></div>'
+    + '</div>'
+    + '<div class="scroll">'
+    +   '<div class="lsn-head">'
+    +     '<div class="tag">先看这里</div>'
+    +     '<h2>'+esc(m.name)+'</h2>'
+    +     '<p>'+esc(m.sub)+'</p>'
+    +   '</div>'
+    +   body
+    + '</div>'
+    + '<div class="foot"><button class="btn" id="go">开始练习</button></div>'
+    + '</div>';
+
+  document.getElementById('back').onclick = function(){ sfxTap(); state.screen='home'; render(); };
+  document.getElementById('go').onclick = function(){ sfxTap(); startQuiz(m.id); };
+}
+
+/* ---------- 开始练习 ---------- */
+function startQuiz(mid){
+  state.session = { list: pickQuestions(mid, 10), idx:0, correct:0, wrongs:[], answered:false, cur:null, title:findMod(mid).name };
+  state.combo = 0;
+  state.screen = 'quiz';
+  loadQ();
+}
+function startDaily(){
+  state.session = { list: pickDaily(10), idx:0, correct:0, wrongs:[], answered:false, cur:null, title:'今日任务' };
+  state.combo = 0;
+  state.screen = 'quiz';
+  loadQ();
+}
+function loadQ(){
+  const s = state.session;
+  const cur = s.list[s.idx];
+  const q = cur.q;
+  s.answered = false;
+  s.cur = { picked:null, order:null, avail:[], chosen:[] };
+  if(q.t === 'c') s.cur.order = shuffle(q.o.map(function(_,i){ return i; }));
+  if(q.t === 'b') s.cur.avail = shuffle(q.tok.map(function(w,i){ return {id:i, w:w}; }));
+  render();
+}
+
+/* ---------- 练习页 ---------- */
+function renderQuiz(){
+  const s = state.session;
+  const cur = s.list[s.idx];
+  const q = cur.q;
+  const m = findMod(cur.mid);
+  const total = s.list.length;
+
+  let dots = '';
+  for(let i=0;i<total;i++){
+    dots += '<i class="'+(i < s.idx ? 'done' : (i === s.idx ? 'now' : ''))+'"></i>';
+  }
+
+  let inner = '';
+  if(q.t === 'c'){
+    inner += '<div class="opts" id="opts">';
+    s.cur.order.forEach(function(oi, k){
+      inner += '<button class="opt" data-i="'+oi+'"><span class="k">'
+        + String.fromCharCode(65 + k) + '</span><span>'+esc(q.o[oi])+'</span></button>';
+    });
+    inner += '</div>';
+  } else if(q.t === 'i'){
+    inner += '<div class="answrap">'
+      + '<input class="ansinput" id="ansInput" type="text" inputmode="latin" '
+      + 'autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" '
+      + 'placeholder="在这里输入答案…">'
+      + '</div>'
+      + '<div class="hintline" id="hintline">'
+      +   '<button class="hintbtn" id="hintBtn">💡 提示</button>'
+      +   '<span class="hinttxt" id="hintTxt"></span>'
+      + '</div>';
+  } else {
+    inner += '<div class="slot" id="slot"></div><div class="bank" id="bank"></div>';
+  }
+
+  const sq = splitQ(q);
+
+  app.innerHTML = '<div class="screen" style="--c1:'+m.c1+';--c2:'+m.c2+';--cd:'+m.cd+'">'
+    + '<div class="top">'
+    +   '<button class="icon-btn" id="back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>'
+    +   '<div class="dots">'+dots+'</div>'
+    +   '<div class="pill">⭐ <b>'+state.stars+'</b></div>'
+    + '</div>'
+    + '<div class="qbody" id="qbody">'
+    +   '<div class="qcard">'
+    +     '<div class="qinst">'+esc(sq.inst)+'</div>'
+    +     '<div class="qtext">'+nl(sq.body)+'</div>'
+    +   '</div>'
+    +   inner
+    +   '<div class="cheat"><div class="cheat-in"><b>💡 本关要点</b>'
+    +     m.L.slice(0, 3).map(function(l){ return '<div>· '+esc(l.h)+'</div>'; }).join('')
+    +   '</div></div>'
+    + '</div>'
+    + '<div class="foot" id="foot"><button class="btn" id="footBtn">检查答案</button></div>'
+    + '<div class="sheet" id="sheet"></div>'
+    + '</div>';
+
+  document.getElementById('back').onclick = function(){ sfxTap(); state.screen='home'; render(); };
+  document.getElementById('footBtn').onclick = function(){
+    if(s.answered) nextQ(); else check();
+  };
+
+  if(q.t === 'c'){
+    app.querySelectorAll('.opt').forEach(function(el){
+      el.onclick = function(){
+        if(s.answered) return;
+        s.cur.picked = parseInt(el.dataset.i, 10);
+        app.querySelectorAll('.opt').forEach(function(o){ o.classList.remove('wrong'); });
+        el.classList.add('wrong');
+        check();
+      };
+    });
+  }
+  if(q.t === 'i'){
+    const inp = document.getElementById('ansInput');
+    inp.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){ e.preventDefault(); inp.blur(); check(); }
+    });
+    document.getElementById('hintBtn').onclick = function(){
+      sfxTap();
+      const first = q.a[0].split(' ')[0];
+      document.getElementById('hintTxt').textContent = '首词是 “' + first + '”，一共 ' + q.a[0].split(' ').length + ' 个词';
+    };
+  }
+  if(q.t === 'b') renderBank();
+}
+
+/* 题干形如「改成否定句：\n原句」，把指令和句子拆开显示 */
+function splitQ(q){
+  const i = q.q.indexOf('\n');
+  if(i > 0){
+    const first = q.q.slice(0, i);
+    if(/：$/.test(first)) return { inst:first.slice(0, -1), body:q.q.slice(i+1) };
+  }
+  const def = q.t === 'c' ? '选一个正确答案' : (q.t === 'b' ? '点词块组句' : '写出答案');
+  return { inst:def, body:q.q };
+}
+
+function renderBank(){
+  const s = state.session;
+  const slot = document.getElementById('slot');
+  const bank = document.getElementById('bank');
+  if(!slot || !bank) return;
+
+  slot.innerHTML = s.cur.chosen.length
+    ? s.cur.chosen.map(function(t){ return '<button class="tok on" data-side="s" data-id="'+t.id+'">'+esc(t.w)+'</button>'; }).join('')
+    : '<span class="ph">点下面的词块，按顺序排好</span>';
+
+  bank.innerHTML = s.cur.avail.map(function(t){
+    return '<button class="tok" data-side="b" data-id="'+t.id+'">'+esc(t.w)+'</button>';
+  }).join('');
+
+  slot.querySelectorAll('.tok').forEach(function(el){
+    el.onclick = function(){
+      if(s.answered) return;
+      sfxTap();
+      const id = parseInt(el.dataset.id, 10);
+      const i = s.cur.chosen.findIndex(function(t){ return t.id === id; });
+      if(i < 0) return;
+      s.cur.avail.push(s.cur.chosen.splice(i,1)[0]);
+      renderBank();
+    };
+  });
+  bank.querySelectorAll('.tok').forEach(function(el){
+    el.onclick = function(){
+      if(s.answered) return;
+      sfxTap();
+      const id = parseInt(el.dataset.id, 10);
+      const i = s.cur.avail.findIndex(function(t){ return t.id === id; });
+      if(i < 0) return;
+      s.cur.chosen.push(s.cur.avail.splice(i,1)[0]);
+      renderBank();
+    };
+  });
+}
+
+/* ---------- 判题 ---------- */
+function check(){
+  const s = state.session;
+  if(s.answered) return;
+  const cur = s.list[s.idx];
+  const q = cur.q;
+  let ok = false;
+
+  if(q.t === 'c'){
+    if(s.cur.picked === null){ toast('先选一个答案吧'); return; }
+    ok = (s.cur.picked === q.a);
+    app.querySelectorAll('.opt').forEach(function(el){
+      const i = parseInt(el.dataset.i, 10);
+      el.style.pointerEvents = 'none';
+      if(i === q.a) el.classList.add('right');
+      else if(i === s.cur.picked) el.classList.add('wrong');
+      else el.classList.add('dim');
+    });
+    if(!ok){
+      const bad = app.querySelector('.opt.wrong');
+      if(bad){ bad.classList.add('shake'); }
+    }
+  }
+  else if(q.t === 'i'){
+    const inp = document.getElementById('ansInput');
+    const v = inp.value.trim();
+    if(!v){ toast('先写一写答案'); inp.focus(); return; }
+    const u = norm(v);
+    ok = q.a.some(function(a){ return norm(a) === u; });
+    inp.disabled = true;
+    const hl = document.getElementById('hintline');
+    if(hl) hl.style.display = 'none';
+    if(!ok) inp.classList.add('shake');
+  }
+  else {
+    const text = s.cur.chosen.map(function(t){ return t.w; }).join(' ');
+    if(!text){ toast('先点几个词块吧'); return; }
+    const u = norm(text);
+    ok = q.a.some(function(a){ return norm(a) === u; });
+    app.querySelectorAll('.tok').forEach(function(t){ t.style.pointerEvents = 'none'; });
+  }
+
+  s.answered = true;
+  record(cur.mid, cur.qi, ok);
+
+  const rightAns = (q.t === 'c') ? q.o[q.a] : q.a[0];
+  const shown = (q.t === 'c') ? rightAns : (rightAns.charAt(0).toUpperCase() + rightAns.slice(1)) + (q.s ? '' : '.');
+
+  if(ok){
+    s.correct++;
+    state.stars++;
+    state.combo++;
+    if(state.combo >= 3) state.stars++;   // 连击奖励：额外 +1 星
+    save('sm_stars', state.stars);
+    sfxOk(); buzz(18);
+    const ns = app.querySelector('.top .pill b');
+    if(ns) ns.textContent = state.stars;
+    const r = document.querySelector('.qcard').getBoundingClientRect();
+    burst(r.left + r.width/2, r.top + r.height/2);
+    if(state.combo >= 3) showCombo(state.combo);
+  } else {
+    state.combo = 0;
+    s.wrongs.push({ q:q.q.replace(/\n/g,' '), a:shown });
+    sfxNo(); buzz([26,50,26]);
+  }
+
+  showSheet(ok, shown, q.tip, q.t !== 'c');
+
+  const footBtn = document.getElementById('footBtn');
+  footBtn.textContent = (s.idx === s.list.length - 1) ? '看看成绩' : '下一题';
+  footBtn.classList.toggle('ok', ok);
+
+  setTimeout(function(){
+    const b = document.getElementById('qbody');
+    if(b) b.scrollTop = b.scrollHeight;
+  }, 60);
+}
+
+function record(mid, qi, ok){
+  const k = mid + '-' + qi;
+  const st = state.qstat[k] || {w:0,c:0};
+  if(ok){ st.c++; } else { st.w++; }
+  state.qstat[k] = st;
+  save('sm_q', state.qstat);
+}
+
+function showSheet(ok, ansText, tip, showAns){
+  const sheet = document.getElementById('sheet');
+  const s = state.session;
+  const isLast = (s.idx === s.list.length - 1);
+  const bonus = (ok && state.combo >= 3)
+    ? '<span class="up">连击 x'+state.combo+' · +2 ⭐</span>'
+    : (ok ? '<span class="up">答对啦 · +1 ⭐</span>' : '<span>没关系，记住它</span>');
+
+  sheet.innerHTML = '<div class="sheet-grip"></div>'
+    + '<div class="sheet-head">'
+    +   mascot(ok ? 'cheer' : 'sad', 'sheet-m')
+    +   '<div class="sheet-t">'
+    +     '<b>'+(ok ? pickPraise() : '差一点点')+'</b>'
+    +     bonus
+    +   '</div>'
+    + '</div>'
+    + '<div class="sheet-body">'
+    +   (showAns && !ok ? '<div class="ans"><em>正确答案</em>'+esc(ansText)+'</div>' : '')
+    +   esc(tip || '')
+    + '</div>'
+    + '<button class="btn '+(ok ? 'ok' : '')+'" id="sheetBtn">'+(isLast ? '看看成绩' : '继续')+'</button>';
+
+  const foot = document.getElementById('foot');
+  if(foot) foot.style.visibility = 'hidden';
+
+  document.getElementById('sheetBtn').onclick = function(){ sfxTap(); nextQ(); };
+  requestAnimationFrame(function(){ sheet.classList.add('show'); });
+}
+
+let praiseIdx = 0;
+function pickPraise(){
+  const p = ['太棒了！','答对啦！','真厉害！','就是这个！','完全正确！','厉害呀！'];
+  praiseIdx = (praiseIdx + 1 + Math.floor(Math.random()*3)) % p.length;
+  return p[praiseIdx];
+}
+
+function nextQ(){
+  const s = state.session;
+  const sheet = document.getElementById('sheet');
+  if(sheet) sheet.classList.remove('show');
+  if(s.idx < s.list.length - 1){
+    setTimeout(function(){ s.idx++; loadQ(); }, 180);
+  } else {
+    setTimeout(finish, 200);
+  }
+}
+
+/* ---------- 结果 ---------- */
+function finish(){
+  const s = state.session;
+  const rate = Math.round(s.correct / s.list.length * 100);
+  if(s.correct > (state.best[s.title] || 0)){ state.best[s.title] = s.correct; save('sm_best', state.best); }
+  state.screen = 'result';
+  sfxLevel();
+  render();
+}
+
+function renderResult(){
+  const s = state.session;
+  const total = s.list.length;
+  const rate = Math.round(s.correct/total*100);
+  let mood = 'sad', title = '再试一次吧', sub = '错题会多出现几次，很快就能记住';
+  if(rate === 100){ mood='cheer'; title='全部答对！'; sub='太厉害了，这一关你完全掌握了'; }
+  else if(rate >= 80){ mood='happy'; title='非常棒！'; sub='就差一点点，再来一次就满分了'; }
+  else if(rate >= 60){ mood='happy'; title='进步很明显'; sub='把错题再看一遍，下次一定更好'; }
+
+  let wrongHtml = '';
+  if(s.wrongs.length){
+    wrongHtml = '<div class="rw-title">这几道题要再看一眼</div>';
+    s.wrongs.forEach(function(w){
+      wrongHtml += '<div class="rw"><div class="a">'+nl(w.q)+'</div><div class="b">✔ '+esc(w.a)+'</div></div>';
+    });
+  }
+
+  app.innerHTML = '<div class="screen">'
+    + '<div class="res">'
+    +   mascot(mood, 'res-mascot')
+    +   '<h2>'+title+'</h2>'
+    +   '<p class="sub">'+sub+'</p>'
+    +   '<div class="res-stats">'
+    +     '<div class="stat"><b style="color:#22C79A">'+s.correct+'</b><span>答对</span></div>'
+    +     '<div class="stat"><b style="color:#FF6B81">'+(total-s.correct)+'</b><span>答错</span></div>'
+    +     '<div class="stat"><b style="color:#4C8DFF">'+rate+'%</b><span>正确率</span></div>'
+    +   '</div>'
+    +   wrongHtml
+    + '</div>'
+    + '<div class="foot"><div class="btn-row">'
+    +   '<button class="btn ghost" id="homeBtn">回首页</button>'
+    +   '<button class="btn" id="againBtn">'+(s.wrongs.length ? '再练一次' : '继续挑战')+'</button>'
+    + '</div></div>'
+    + '</div>';
+
+  document.getElementById('homeBtn').onclick = function(){ sfxTap(); state.screen='home'; render(); };
+  document.getElementById('againBtn').onclick = function(){
+    sfxTap();
+    if(s.title === '今日任务'){ startDaily(); return; }
+    const first = s.list[0];
+    if(first) startQuiz(first.mid); else { state.screen='home'; render(); }
+  };
+}
+
+/* ---------- 启动 ---------- */
+document.addEventListener('pointerdown', function once(){
+  ac();
+  document.removeEventListener('pointerdown', once);
+});
+render();
+</script>
+</body>
+</html>

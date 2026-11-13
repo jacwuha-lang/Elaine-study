@@ -1,0 +1,399 @@
+/* ============================================================
+   ipad.css — 句子小魔法 · iPad / 平板适配层
+   ------------------------------------------------------------
+   只在 <html class="ipad"> 下生效。这个 class 由 index.html 头部
+   的内联脚本判定（UA + 触屏 + 屏幕尺寸），执行得比样式还早，
+   所以不会出现「先渲染手机版再跳变」的闪烁。
+
+   两个方向分开设计：
+     · 竖屏 768×1024 —— 单栏加宽到 700px，全部字号按 1.4 倍放大
+     · 横屏 1024×768 —— 首页左右分栏；练习页把小鲸挪到右侧空白，
+                        像真的坐在旁边陪她做题
+
+   app.css 一行没动，手机端完全不受影响。
+   ============================================================ */
+
+/* ---------------- 0. 容器：脱掉手机壳 ---------------- */
+html.ipad body{
+  background:var(--bg);
+  display:block;
+  overflow:hidden;
+}
+html.ipad .phone{
+  max-width:none;width:100%;height:100%;
+  border:0;border-radius:0;box-shadow:none;
+}
+html.ipad .phone::before{display:none;}   /* 刘海 */
+
+/* 屏幕高度变化（软键盘弹出）时，用 dvh 兜住，避免底部按钮被顶出屏幕 */
+@supports (height:100dvh){
+  html.ipad body,html.ipad .phone{height:100dvh;}
+}
+
+/* ---------------- 1. 顶栏 ---------------- */
+html.ipad .top{padding:20px 32px 12px;gap:14px;}
+html.ipad .brand{font-size:16px;letter-spacing:3px;}
+html.ipad .top-title{font-size:21px;}
+html.ipad .icon-btn{width:52px;height:52px;border-radius:17px;}
+html.ipad .icon-btn svg{width:24px;height:24px;}
+html.ipad .pill{font-size:17px;padding:11px 19px;gap:7px;}
+html.ipad .gear{width:46px;height:46px;border-radius:15px;font-size:20px;}
+
+/* ---------------- 2. 滚动区 ---------------- */
+html.ipad .scroll{padding:0 32px 44px;}
+
+/* ---------------- 3. 首页 ---------------- */
+html.ipad .hero{gap:10px;padding:4px 0 22px;}
+html.ipad .hero-m{width:200px;height:200px;}
+html.ipad .hero-txt{padding-left:10px;}
+html.ipad .hero-txt h1{font-size:36px;margin-bottom:9px;letter-spacing:-1px;}
+html.ipad .hero-txt p{font-size:17px;line-height:1.55;}
+
+html.ipad .membar{padding:16px 10px;border-radius:22px;margin-bottom:16px;}
+html.ipad .membar b{font-size:27px;}
+html.ipad .membar span{font-size:14px;}
+html.ipad .membar.empty{font-size:15px;padding:19px 16px;}
+
+html.ipad .task{padding:22px;border-radius:28px;margin-bottom:15px;gap:16px;}
+html.ipad .task-txt .k{font-size:14px;letter-spacing:3px;}
+html.ipad .task-txt .v{font-size:27px;margin:3px 0 5px;}
+html.ipad .task-txt .d{font-size:16px;}
+html.ipad .task-go{width:56px;height:56px;}
+html.ipad .task-go svg{width:24px;height:24px;}
+
+html.ipad .gen{padding:18px 22px;border-radius:26px;margin-bottom:26px;gap:16px;}
+html.ipad .gen-ico{width:52px;height:52px;border-radius:17px;font-size:26px;}
+html.ipad .gen-txt b{font-size:21px;}
+html.ipad .gen-txt span{font-size:15px;}
+
+html.ipad .sec{margin:0 3px 16px;}
+html.ipad .sec span{font-size:21px;}
+html.ipad .sec small{font-size:15px;}
+
+html.ipad .grid{grid-template-columns:1fr 1fr;gap:16px;}
+html.ipad .mod{padding:18px 16px 15px;border-radius:26px;}
+html.ipad .mod-ico{width:52px;height:52px;border-radius:17px;font-size:26px;margin-bottom:12px;}
+html.ipad .mod-name{font-size:20px;}
+html.ipad .mod-sub{font-size:14px;height:18px;margin-top:4px;}
+html.ipad .mod-bar{height:8px;margin-top:13px;}
+html.ipad .mod-num{font-size:13px;margin-top:7px;}
+html.ipad .mod-num.inf{margin-top:16px;}
+
+/* ---------------- 4. 讲解页 ---------------- */
+html.ipad .lsn-head{padding:6px 3px 22px;}
+html.ipad .lsn-head .tag{font-size:14px;padding:7px 15px;border-radius:11px;margin-bottom:13px;}
+html.ipad .lsn-head h2{font-size:31px;margin-bottom:7px;}
+html.ipad .lsn-head p{font-size:17px;}
+
+html.ipad .lcard{padding:22px 20px;border-radius:24px;margin-bottom:15px;}
+html.ipad .lcard h3{font-size:20px;margin-bottom:10px;}
+html.ipad .lcard p{font-size:16px;line-height:1.75;margin-bottom:13px;}
+html.ipad .eg{padding:13px 15px;border-radius:14px;margin-top:9px;}
+html.ipad .eg .en{font-size:18px;line-height:1.6;}
+html.ipad .eg .cn{font-size:15px;margin-top:4px;}
+html.ipad .eg-spk{font-size:14px;opacity:.7;}
+
+/* ---------------- 5. 练习页 ---------------- */
+html.ipad .qbody{padding:10px 32px 18px;}
+html.ipad .qcard{padding:24px 22px;border-radius:26px;}
+html.ipad .qhead{margin-bottom:14px;}
+html.ipad .qinst{font-size:14px;padding:7px 14px;border-radius:10px;}
+html.ipad .spk{width:46px;height:46px;border-radius:15px;font-size:20px;}
+html.ipad .spk.wait::after{width:20px;height:20px;border-width:3px;}
+html.ipad .qtext{font-size:27px;line-height:1.6;}
+html.ipad .blk{width:64px;border-bottom-width:4px;margin:0 4px;}
+
+html.ipad .opts{gap:13px;margin-top:19px;}
+html.ipad .opt{padding:18px 20px;border-radius:20px;font-size:21px;gap:15px;}
+html.ipad .opt .k{width:34px;height:34px;border-radius:11px;font-size:15px;}
+
+html.ipad .answrap{margin-top:19px;}
+html.ipad .ansinput{padding:20px;font-size:22px;border-radius:20px;}
+html.ipad .ansinput::placeholder{font-size:18px;}
+html.ipad .hintline{margin-top:14px;gap:12px;min-height:30px;}
+html.ipad .hintbtn{font-size:16px;padding:11px 19px;border-radius:13px;}
+html.ipad .hinttxt{font-size:15px;}
+
+html.ipad .slot{margin-top:19px;min-height:86px;padding:15px;border-radius:20px;gap:10px;}
+html.ipad .slot .ph{font-size:16px;}
+html.ipad .bank{margin-top:18px;gap:11px;min-height:56px;}
+html.ipad .tok{padding:14px 20px;border-radius:16px;font-size:20px;}
+
+html.ipad .buddy{min-height:160px;gap:13px;padding:14px 0 8px;flex:none;}
+html.ipad .buddy-m{width:172px;height:172px;}
+html.ipad .buddy-say{font-size:16px;padding:9px 20px;}
+
+html.ipad .cheat{padding-top:22px;}
+html.ipad .cheat-in{padding:15px 18px;border-radius:18px;font-size:16px;line-height:1.7;}
+html.ipad .cheat-in b{font-size:14px;margin-bottom:5px;}
+
+/* ---------------- 6. 底部按钮 ---------------- */
+html.ipad .foot{padding:14px 32px calc(24px + env(safe-area-inset-bottom));}
+html.ipad .btn{height:68px;border-radius:22px;font-size:21px;letter-spacing:.8px;}
+html.ipad .foot-tip{font-size:15px;margin-top:12px;}
+html.ipad .btn-row{gap:14px;}
+
+/* ---------------- 7. 进度 ---------------- */
+html.ipad .dots{gap:7px;}
+html.ipad .dots i{width:11px;height:11px;}
+html.ipad .dots i.now{width:30px;}
+html.ipad .pbar{height:10px;}
+html.ipad .pbar-num{font-size:14px;}
+html.ipad .pbar-wrap{gap:12px;}
+
+/* ---------------- 8. 反馈弹层：从「贴底抽屉」变成居中弹窗 ----------------
+   两个坑：
+   1) 必须把 top 一起管住。只写 bottom 时，.toast.up 那条规则给出的 top
+      也会生效，绝对定位元素同时有 top/bottom 且 height:auto 会被拉满
+      整屏高度 —— 表现就是屏幕上冒出一根黑色长条。
+   2) 隐藏时必须 visibility:hidden。手机上靠 translateY(115%) 移出屏幕，
+      移到屏幕外自然点不到；这里弹窗只在原地淡出，一个透明的空壳仍然
+      会吃掉整块区域的点击（实测会把「检查答案」按钮挡死）。
+      遮罩则用超大 box-shadow 做，它不参与 hit testing。 */
+html.ipad .sheet{
+  left:50%;right:auto;bottom:auto;top:50%;
+  width:min(620px,calc(100% - 64px));
+  max-height:calc(100% - 90px);
+  border-radius:30px;padding:22px 26px 24px;
+  transform:translate(-50%,calc(-50% + 54px));
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:transform .38s cubic-bezier(.2,.95,.3,1.02),
+             opacity .26s ease,
+             visibility 0s linear .4s;
+  box-shadow:0 0 0 100vmax rgba(46,36,64,.3),
+             0 28px 70px -16px rgba(46,36,64,.42);
+}
+html.ipad .sheet.show{
+  transform:translate(-50%,-50%);opacity:1;
+  visibility:visible;pointer-events:auto;
+  transition:transform .38s cubic-bezier(.2,.95,.3,1.02),
+             opacity .26s ease,
+             visibility 0s;
+}
+html.ipad .sheet-grip{display:none;}   /* 不再是抽屉，抓手没意义 */
+html.ipad .sheet-head{gap:14px;margin-bottom:13px;}
+html.ipad .sheet-m{width:104px;height:104px;}
+html.ipad .sheet-t b{font-size:24px;}
+html.ipad .sheet-t span{font-size:16px;}
+html.ipad .sheet-body{padding:15px 17px;border-radius:18px;font-size:16px;line-height:1.75;margin-bottom:17px;max-height:38vh;}
+html.ipad .sheet-body .ans{font-size:19px;padding-bottom:11px;margin-bottom:11px;}
+html.ipad .sheet-body .ans em{font-size:13px;}
+html.ipad .sheet-body .mine{font-size:17px;padding-bottom:11px;margin-bottom:11px;}
+html.ipad .sheet-body .mine em{font-size:13px;}
+html.ipad .sheet-body .say{font-size:16px;padding:12px 14px;gap:10px;border-radius:0 14px 14px 0;}
+html.ipad .sheet-body .say i{font-size:18px;}
+html.ipad .sheet-body .tip{font-size:15px;margin-top:12px;padding-top:12px;}
+html.ipad .sheet-ask{font-size:16px;padding:14px;border-radius:15px;margin-bottom:13px;}
+html.ipad .sheet-flag{font-size:14px;padding:12px;border-radius:14px;margin-bottom:13px;}
+html.ipad .judge-wait{font-size:15px;padding:13px 16px;border-radius:15px;margin-top:15px;}
+html.ipad .judge-wait i{width:17px;height:17px;border-width:3px;}
+html.ipad .mem-strip{font-size:14px;margin-top:13px;padding-top:12px;}
+html.ipad .mem-strip.done{font-size:15px;}
+
+/* ---------------- 9. 结果页 ---------------- */
+html.ipad .res{padding:28px 32px 14px;}
+html.ipad .res-m{width:196px;height:196px;}
+html.ipad .res h2{font-size:33px;margin-top:12px;}
+html.ipad .res .sub{font-size:17px;margin-bottom:26px;}
+html.ipad .res-stats{gap:14px;margin-bottom:20px;}
+html.ipad .stat{padding:18px 8px;border-radius:22px;}
+html.ipad .stat b{font-size:30px;}
+html.ipad .stat span{font-size:14px;}
+html.ipad .rw-title{font-size:16px;margin:8px 3px 12px;}
+html.ipad .rw{padding:15px 18px;border-radius:18px;margin-bottom:11px;}
+html.ipad .rw .a,html.ipad .rw .b{font-size:16px;}
+html.ipad .rw-ask{font-size:15px;padding:9px 16px;border-radius:12px;margin-top:11px;}
+html.ipad .rw-ai-txt{font-size:15px;padding:11px 14px;}
+html.ipad .rw-when{font-size:12.5px;padding:3px 9px;}
+html.ipad .res-mem{padding:14px 17px;border-radius:18px;margin-bottom:18px;}
+html.ipad .res-mem span{font-size:14px;}
+html.ipad .res-mem b{font-size:15px;}
+
+/* ---------------- 10. 设置页 ---------------- */
+html.ipad .set-card{padding:22px 22px 19px;border-radius:24px;margin-bottom:16px;}
+html.ipad .set-h{font-size:19px;margin-bottom:8px;}
+html.ipad .set-note{font-size:15px;margin-bottom:13px;}
+html.ipad .set-note code{font-size:13px;}
+html.ipad .voice-list{grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:13px;}
+html.ipad .voice-item{padding:11px 13px;border-radius:15px;}
+html.ipad .voice-item b{font-size:16px;}
+html.ipad .voice-item span{font-size:13px;}
+html.ipad .voice-hd{font-size:14px;margin:4px 0 -1px;}
+html.ipad .set-input{font-size:17px;padding:14px 16px;border-radius:15px;margin-bottom:12px;}
+html.ipad .set-row{gap:11px;margin-bottom:12px;}
+html.ipad .set-btn{font-size:16px;padding:14px 16px;border-radius:15px;}
+html.ipad .set-line{font-size:16px;padding:13px 0;margin-bottom:13px;}
+html.ipad .sw{width:54px;height:32px;}
+html.ipad .sw i{width:26px;height:26px;}
+html.ipad .sw.on i{transform:translateX(22px);}
+/* 薄弱题型排行 */
+html.ipad .weak-item{padding:10px 0;gap:11px;}
+html.ipad .wi-ico{font-size:18px;width:24px;}
+html.ipad .wi-name{font-size:16px;}
+html.ipad .wi-bar{width:76px;height:8px;}
+html.ipad .wi-rate{font-size:15px;width:46px;}
+html.ipad .weak-empty{font-size:15px;padding-bottom:13px;}
+html.ipad .bad-n{font-size:16px;}
+
+/* ---------------- 11. 气泡 / 提示 / 特效 ---------------- */
+html.ipad .m-bubble{font-size:15px;padding:10px 16px;border-radius:15px;}
+html.ipad .m-bubble::after{border-width:8px;}
+/* iPad 上 toast 挪到顶部。横屏时屏幕只有 768 高，底部 150px 正好压在
+   「本关要点」上，提示出来反而挡住内容。 */
+html.ipad .toast{
+  font-size:16px;padding:14px 24px;border-radius:16px;
+  bottom:auto;top:calc(env(safe-area-inset-top) + 74px);
+  transform:translateX(-50%) translateY(-14px);
+}
+html.ipad .toast.show{transform:translateX(-50%) translateY(0);}
+html.ipad .toast.up{top:calc(env(safe-area-inset-top) + 18px);}
+html.ipad .combo{font-size:48px;}
+
+/* ============================================================
+   12. 竖屏专属微调
+   ============================================================ */
+html.ipad.port .scroll,
+html.ipad.port .qbody{max-width:760px;margin:0 auto;width:100%;}
+html.ipad.port .foot{max-width:760px;margin:0 auto;width:100%;}
+html.ipad.port .top{max-width:760px;margin:0 auto;width:100%;}
+/* 弹层也跟着内容走，别贴在 768 的两边 */
+html.ipad.port .sheet{width:min(620px,calc(100% - 80px));}
+
+/* ============================================================
+   13. 横屏专属：首页两栏 / 练习页小鲸浮到右边
+   ============================================================ */
+html.ipad.land .scroll,
+html.ipad.land .qbody{max-width:none;}
+
+/* ---- 13.1 首页：左边「今天做什么」，右边「知识地图」 ----
+   两栏各自独立成列，不共享行高 —— 用 grid 分栏的话，
+   右栏八张卡会把左栏的「今日任务」撑成一根柱子。 */
+html.ipad.land .scroll.home{
+  display:flex;align-items:stretch;gap:34px;
+  padding-bottom:22px;
+}
+/* 左栏拉到和右栏一样高，把多出来的高度留给 hero，
+   小鲸就落在这一列的视觉中心，不会在底下留一大块空白 */
+html.ipad.land .home-l{
+  flex:0 0 382px;min-width:0;
+  display:flex;flex-direction:column;
+}
+html.ipad.land .home-l > .hero{flex:1;}
+html.ipad.land .home-r{flex:1;min-width:0;}
+
+/* 横屏左栏只有 382px，小鲸和标题别撑爆（标题 7 个字要放得下一行） */
+html.ipad.land .hero-m{width:172px;height:172px;}
+html.ipad.land .hero-txt{padding-left:8px;}
+html.ipad.land .hero-txt h1{font-size:26px;margin-bottom:7px;}
+html.ipad.land .hero-txt p{font-size:14px;}
+html.ipad.land .hero{padding-bottom:18px;gap:4px;}
+html.ipad.land .task{padding:20px;border-radius:24px;}
+html.ipad.land .task-txt .v{font-size:24px;}
+html.ipad.land .task-txt .d{font-size:14.5px;}
+html.ipad.land .task-go{width:50px;height:50px;}
+html.ipad.land .gen{padding:17px 19px;border-radius:22px;margin-bottom:0;}
+html.ipad.land .gen-ico{width:46px;height:46px;font-size:23px;}
+html.ipad.land .gen-txt b{font-size:19px;}
+html.ipad.land .gen-txt span{font-size:13.5px;}
+html.ipad.land .membar{padding:14px 6px;margin-bottom:14px;}
+html.ipad.land .membar b{font-size:24px;}
+html.ipad.land .membar span{font-size:13px;}
+html.ipad.land .sec{margin-bottom:13px;}
+
+/* 右栏卡片紧凑一点，八张一屏放下 */
+html.ipad.land .grid{gap:13px;}
+html.ipad.land .mod{padding:14px 13px 12px;border-radius:22px;}
+html.ipad.land .mod-ico{width:42px;height:42px;border-radius:14px;font-size:21px;margin-bottom:8px;}
+html.ipad.land .mod-name{font-size:17.5px;}
+html.ipad.land .mod-sub{font-size:12.5px;}
+html.ipad.land .mod-bar{height:6px;margin-top:9px;}
+html.ipad.land .mod-num{font-size:12px;margin-top:5px;}
+html.ipad.land .mod-num.inf{margin-top:10px;}
+
+/* ---- 13.2 练习页：小鲸搬到右侧空白，像坐在旁边 ---- */
+html.ipad.land .qbody{padding-right:352px;}
+html.ipad.land .qbody > .qcard,
+html.ipad.land .qbody > .opts,
+html.ipad.land .qbody > .answrap,
+html.ipad.land .qbody > .hintline,
+html.ipad.land .qbody > .slot,
+html.ipad.land .qbody > .bank,
+html.ipad.land .qbody > .cheat{max-width:660px;}
+
+/* 横屏四个选项排两行，不用滚就能看到底下的要点。
+   整句选项（超过 15 字符，JS 会打上 .long）退回单列，不然会折行。 */
+html.ipad.land .opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;}
+html.ipad.land .opts.long{grid-template-columns:1fr;}
+html.ipad.land .opt{padding:15px 17px;font-size:19px;border-radius:18px;}
+html.ipad.land .opt .k{width:30px;height:30px;border-radius:10px;font-size:14px;}
+html.ipad.land .cheat{padding-top:14px;}
+html.ipad.land .cheat-in{padding:12px 15px;font-size:14px;line-height:1.6;}
+html.ipad.land .cheat-in b{font-size:12.5px;}
+
+html.ipad.land .buddy{
+  position:fixed;right:44px;top:50%;transform:translateY(-50%);
+  width:270px;min-height:0;padding:0;z-index:6;
+  flex-direction:column;
+}
+html.ipad.land .buddy-m{width:236px;height:236px;}
+html.ipad.land .buddy-say{font-size:16px;white-space:normal;text-align:center;line-height:1.5;}
+
+/* 讲解页横屏：正文限宽居中，右边留白更舒服。
+   首页是两栏的，不能套这条，否则右栏会被压窄。
+   width:100% 不能省 —— flex 容器里 align-items:stretch 配上
+   margin:auto，元素会退化成内容宽度，卡片就缩成一小条了。 */
+html.ipad.land .scroll:not(.home):not(.hub){max-width:780px;margin:0 auto;width:100%;}
+
+/* 学习中心横屏：左边今日任务，右边四个模块 */
+html.ipad.land .scroll.hub{
+  display:flex;align-items:flex-start;gap:34px;padding-bottom:22px;
+}
+html.ipad.land .hub-l{flex:0 0 420px;min-width:0;}
+html.ipad.land .hub-r{flex:1;min-width:0;}
+html.ipad.land .hub-lead{font-size:16px;}
+html.ipad.land .hub-mod{min-height:168px;border-radius:28px;padding:18px;}
+html.ipad.land .hub-mod b{font-size:28px;}
+html.ipad.land .hub-mod small{font-size:15px;}
+html.ipad.land .hub-task b{font-size:18px;}
+html.ipad.land .hub-task small{font-size:14px;}
+
+/* 结果页横屏：竖着只有 768，把顶部压紧一点，错题多露几条出来 */
+html.ipad.land .res{max-width:820px;margin:0 auto;width:100%;padding-top:20px;}
+html.ipad.land .res-m{width:146px;height:146px;}
+html.ipad.land .res h2{font-size:27px;margin-top:6px;}
+html.ipad.land .res .sub{font-size:15px;margin-bottom:16px;}
+html.ipad.land .res-stats{margin-bottom:13px;}
+html.ipad.land .stat{padding:13px 8px;}
+html.ipad.land .stat b{font-size:26px;}
+html.ipad.land .res-mem{margin-bottom:13px;padding:11px 15px;}
+
+/* ---- 13.3 横屏底栏：按钮和内容同宽，不横跨整屏 ----
+   三个页面正文宽度不同，用 :has() 分别对齐。
+   讲解页/结果页是「限宽居中」，所以连 .foot 一起限宽，
+   按钮就自然落在正文的 padding 里；练习页内容靠左（右边给小鲸），
+   只收窄按钮本身。
+   浏览器不支持 :has() 时只是按钮变全宽，不影响功能。 */
+html.ipad.land .foot{max-width:none;}
+html.ipad.land .screen:has(.qbody) .foot > .btn{max-width:640px;}
+html.ipad.land .screen:has(.lsn-head) .foot{max-width:780px;margin:0 auto;width:100%;}
+html.ipad.land .screen:has(.res) .foot{max-width:820px;margin:0 auto;width:100%;}
+
+/* ============================================================
+   14. 兜底：极窄的横屏（比如 分屏模式 1/3）保持单栏
+   ============================================================ */
+@media (max-width:820px){
+  html.ipad.land .scroll.home,
+  html.ipad.land .scroll.hub{display:block;}
+  html.ipad.land .home-l,
+  html.ipad.land .hub-l{flex:none;}
+  html.ipad.land .qbody{padding-right:32px;}
+  html.ipad.land .buddy{
+    position:static;transform:none;width:auto;
+    min-height:160px;padding:14px 0 8px;
+  }
+  html.ipad.land .buddy-m{width:176px;height:176px;}
+  html.ipad.land .hero-m{width:200px;height:200px;}
+  html.ipad.land .hero-txt h1{font-size:36px;}
+  html.ipad.land .hero-txt p{font-size:17px;}
+  html.ipad.land .gen{margin-bottom:26px;}
+}
