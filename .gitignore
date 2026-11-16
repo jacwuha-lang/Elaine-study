@@ -1,8 +1,11 @@
 # 学习档案：孩子的进度和名字，只留在本机
-profiles/*.json
+profiles/*
+!profiles/.gitkeep
 
 # DeepSeek API Key 和本机运行缓存
 .cache/
+.env
+.env.*
 
 # 日志
 *.log
