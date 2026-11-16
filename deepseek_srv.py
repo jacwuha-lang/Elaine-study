@@ -111,6 +111,22 @@ JUDGE = (
 )
 SCENE["judge"] = JUDGE
 
+# 审核「这题出得有问题」的反馈。和 judge 一样要稳定、可解析，
+# 所以不套小鲸人设，只输出两行：YES/NO + 一句理由。
+FIX = (
+    "你是小学教辅编辑，正在审核学生提交的「这题出得有问题」反馈。\n"
+    "任务：判断这道题是否真的有错误。常见情况：\n"
+    "1. 答案或解析算错；\n"
+    "2. 题干有歧义、条件缺失；\n"
+    "3. 选择题选项重复、或正确答案不唯一；\n"
+    "4. 知识点明显超出小学四年级。\n"
+    "注意：学生自己算错、不会做、只是觉得难，不算题目有问题。\n\n"
+    "只输出两行，不要任何多余内容：\n"
+    "第一行：YES 或 NO\n"
+    "第二行：不超过 30 个字的中文理由\n"
+)
+SCENE["fix"] = FIX
+
 MAX_TOKENS = 200
 TIMEOUT = 15
 
@@ -160,7 +176,7 @@ def chat(scene, messages, key=None, temperature=0.8):
     # 它先写 reasoning_content 再写 content，8 个 token 会被思考过程吃光，
     # content 永远是空串（finish_reason=length）。留够思考的余量，
     # 真正输出的仍然只有 RIGHT / WRONG 一个词。
-    if scene == "judge":
+    if scene in ("judge", "fix"):
         temperature = 0.0
         max_tokens = 512
     else:

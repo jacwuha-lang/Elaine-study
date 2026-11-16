@@ -239,6 +239,9 @@
       if (tEl) tEl.classList.remove('up');
     }
     if (ST.screen === 'hub') return renderHub();
+    if (ST.screen === 'ma' || ST.screen === 'cn' || ST.screen === 'track') {
+      if (SM.subj) return SM.subj.render(ST.screen);
+    }
     if (ST.screen === 'fun') return renderFun();
     if (ST.screen === 'soon') return renderSoon();
     if (ST.screen === 'home') return renderHome();
@@ -259,6 +262,11 @@
   function englishTaskLine() {
     const due = MEM.stats().due;
     return due > 0 ? '10 道题 · 先清 ' + Math.min(8, due) + ' 道待复习' : '10 道题 · 全是新题';
+  }
+
+  function subjectTaskLine(id, n) {
+    const d = SM.day ? SM.day.get(id) : { n: 0, ok: 0 };
+    return d.n > 0 ? '今天已做 ' + d.n + ' 题 · 正确率 ' + Math.round(d.ok / d.n * 100) + '%' : n + ' 道题 · 还没开始';
   }
 
   function renderHub() {
@@ -282,10 +290,12 @@
       +   '</div>'
       +   '<div class="sec"><span>今日任务</span><small>语 · 数 · 英</small></div>'
       +   '<div class="hub-tasks">'
-      +     '<div class="hub-task wait"><span class="hub-task-ico">读</span>'
-      +       '<div><b>语文</b><small>今天还没有安排</small></div></div>'
-      +     '<div class="hub-task wait"><span class="hub-task-ico">算</span>'
-      +       '<div><b>数学</b><small>今天还没有安排</small></div></div>'
+      +     '<button class="hub-task go" id="taskCn" type="button"><span class="hub-task-ico">读</span>'
+      +       '<div><b>语文</b><small>' + subjectTaskLine('cn', 8) + '</small></div>'
+      +       '<i>' + (SM.day && SM.day.get('cn').n ? '继续' : '开始') + '</i></button>'
+      +     '<button class="hub-task go" id="taskMa" type="button"><span class="hub-task-ico">算</span>'
+      +       '<div><b>数学</b><small>' + subjectTaskLine('ma', 10) + '</small></div>'
+      +       '<i>' + (SM.day && SM.day.get('ma').n ? '继续' : '开始') + '</i></button>'
       +     '<button class="hub-task go" id="taskEn" type="button"><span class="hub-task-ico">英</span>'
       +       '<div><b>英语</b><small>' + englishTaskLine() + '</small></div>'
       +       '<i>' + (due > 0 ? due + ' 待复习' : '开始') + '</i></button>'
@@ -293,10 +303,10 @@
       + '</div>'
       + '<div class="hub-r">'
       +   '<div class="hub-mods">'
-      +     '<button class="hub-mod" data-go="soon" data-subj="chinese" type="button" style="--hc:#E25B45;--hd:#C2412D">'
-      +       '<span>读</span><b>语文</b><small>还在准备</small></button>'
-      +     '<button class="hub-mod" data-go="soon" data-subj="math" type="button" style="--hc:#3B82F6;--hd:#1D4ED8">'
-      +       '<span>算</span><b>数学</b><small>还在准备</small></button>'
+      +     '<button class="hub-mod" data-go="cn" type="button" style="--hc:#E25B45;--hd:#C2412D">'
+      +       '<span>读</span><b>语文</b><small>字词 · 拼音</small></button>'
+      +     '<button class="hub-mod" data-go="ma" type="button" style="--hc:#3B82F6;--hd:#1D4ED8">'
+      +       '<span>算</span><b>数学</b><small>口算 · 换算</small></button>'
       +     '<button class="hub-mod" data-go="home" type="button" style="--hc:#FF7A59;--hd:#DE5230">'
       +       '<span>En</span><b>英语</b><small>句子练习</small></button>'
       +     '<button class="hub-mod" data-go="fun" type="button" style="--hc:#8B6CF0;--hd:#6D28D9">'
@@ -309,7 +319,7 @@
     const heroEl = M.mount(hm, 'happy', { click: false });
     const hubLine = document.getElementById('hubLine');
     const HUB_LINES = ['今天想先学哪一科？', '英语可以开始练啦', '玩一玩也很好呀',
-      '我会一直陪着你的', '点我可以跳舞哦', '语文和数学还在准备'];
+      '我会一直陪着你的', '点我可以跳舞哦', '语文和数学也能练啦'];
     function hubTalk(t, silent) {
       if (hubLine) {
         hubLine.textContent = t;
@@ -328,8 +338,9 @@
           M.wait(heroEl);
           askAI('chat', [{
             role: 'user',
-            content: '（孩子在学习中心首页戳了你一下。语文和数学还没开，英语可以练，'
-              + '还有单词闯关和武道擂台。说一句鼓励她的话，或者问问她想学哪一科。不要超过 30 个字。）'
+            content: '（孩子在学习中心首页戳了你一下。现在可以练语文（拼音写字词、多音字、错别字）、'
+              + '数学（口算、单位换算、大数、运算定律）和英语，还有单词闯关和武道擂台。'
+              + '说一句鼓励她的话，或者问问她想学哪一科。不要超过 30 个字。）'
           }]).then(function (j) {
             const t = (j && j.ok && j.text) ? j.text : HUB_LINES[U.rand(HUB_LINES.length)];
             M.setMood(heroEl, 'happy');
@@ -349,6 +360,18 @@
     document.getElementById('taskEn').onclick = function () {
       A.tap();
       startQuiz('all', 10, '今日任务');
+    };
+    document.getElementById('taskCn').onclick = function () {
+      A.tap();
+      ST.screen = 'cn';
+      if (SM.subj) { SM.subj.render('cn'); SM.subj.start('cn'); }
+      else render();
+    };
+    document.getElementById('taskMa').onclick = function () {
+      A.tap();
+      ST.screen = 'ma';
+      if (SM.subj) { SM.subj.render('ma'); SM.subj.start('ma'); }
+      else render();
     };
     app.querySelectorAll('.hub-mod').forEach(function (el) {
       el.onclick = function () {
@@ -395,9 +418,10 @@
       +   '<div class="pill">⭐ <b>' + ST.stars + '</b></div>'
       + '</div>'
       + '<div class="scroll">'
-      +   '<p class="hub-lead">两个游戏都从英语里搬过来了，玩法没变。</p>'
+      +   '<p class="hub-lead">擂台、街机和赛道都在这儿，想玩哪个点哪个。</p>'
       +   (SM.arcade ? SM.arcade.homeCard() : '')
       +   pkCard()
+      +   mpkCard()
       + '</div></div>';
     document.getElementById('hubBack').onclick = function () {
       A.tap();
@@ -406,6 +430,7 @@
     };
     if (SM.arcade) SM.arcade.bindHome(app);
     bindPk(app);
+    bindMpk(app);
   }
 
   function bindPk(root) {
@@ -427,6 +452,37 @@
       }
       location.href = 'pk.html?who=' + encodeURIComponent(who);
     };
+  }
+
+  /* 机器人马拉松：数学答题 + 3D 赛道，独立页面，同理由服务器记账 */
+  function bindMpk(root) {
+    var el = root.querySelector('#mpkEntry');
+    if (!el) return;
+    el.onclick = function () {
+      A.tap();
+      try { SM.store.flush(); } catch (e) { /* ignore */ }
+      var who = SM.store.profile()
+        || (window.__SM_PLAY && window.__SM_PLAY.who) || '';
+      if (!who) {
+        try { who = localStorage.getItem('sm_profile') || ''; } catch (e) { who = ''; }
+      }
+      if (!who) {
+        SM.fx.toast('先在设置里填个学习档案的名字');
+        return;
+      }
+      location.href = 'math-pk.html?who=' + encodeURIComponent(who);
+    };
+  }
+
+  function mpkCard() {
+    return '<button class="arc-entry" id="mpkEntry">'
+      + '<div class="arc-entry-ico">🏁</div>'
+      + '<div class="arc-entry-txt">'
+      + '<b>机器人马拉松</b>'
+      + '<span>4 台机器人同场 · 答对提速 · 50⭐ 报名</span>'
+      + '</div>'
+      + '<div class="arc-entry-cost">PK</div>'
+      + '</button>';
   }
 
   /* ---------------- 英语首页 ---------------- */
@@ -1006,6 +1062,9 @@
     const s = ST.session;
     const alt = kind === 'alt';
 
+    /* 三科共用一条每日流水，学习轨迹页要用 */
+    if (SM.day) SM.day.log('en', ok);
+
     if (s.redo) return settleRedo(item, q, mine, ok, alt);
 
     /* 知识点账本：争议题不记账，否则会把薄弱度算歪 */
@@ -1178,18 +1237,32 @@
 
     document.getElementById('sheetBtn').onclick = function () { A.tap(); nextQ(); };
 
-    /* 「这题出得不对」：家长/孩子觉得题目有歧义，一键拉黑，以后不再生成 */
+    /* 「这题出得不对」：先让孩子说说哪里不对，再由小鲸判断要不要修 */
     const flagBtn = document.getElementById('flagQ');
     if (flagBtn) {
       flagBtn.onclick = function () {
         A.tap();
         if (flagBtn.dataset.done) return;
-        MEM.markBad(item.fp, q.q, item.mid, '手动标记');
-        dropFromSession(item.fp);          // 已回炉的那份也一并摘掉
-        flagBtn.dataset.done = '1';
-        flagBtn.classList.add('done');
-        flagBtn.textContent = '✓ 已记下，这类题不会再出';
-        FX.toast('好，这题小鲸收起来了');
+        if (!SM.fix) {                      // 极端情况下退回一键拉黑
+          MEM.markBad(item.fp, q.q, item.mid, '手动标记');
+          dropFromSession(item.fp);
+          flagBtn.dataset.done = '1';
+          flagBtn.classList.add('done');
+          flagBtn.textContent = '✓ 已记下，这类题不会再出';
+          return;
+        }
+        SM.fix.open({
+          subject: '英语',
+          question: q.q,
+          answer: rightText(q),
+          onAccept: function () {
+            MEM.markBad(item.fp, q.q, item.mid, '手动标记');
+            dropFromSession(item.fp);          // 已回炉的那份也一并摘掉
+            flagBtn.dataset.done = '1';
+            flagBtn.classList.add('done');
+            flagBtn.textContent = '✓ 已记下，这类题不会再出';
+          }
+        });
       };
     }
 
@@ -2030,7 +2103,8 @@
       +   '<div class="set-card">'
       +     '<div class="set-h">📚 小鲸记住的事</div>'
       +     '<div class="set-note">你在哪类题上老栽跟头，小鲸下次就多出那类题；'
-      +       '哪道题觉得出得不干净，在答题页点「这题出得不对」，它就不再出现。</div>'
+      +       '觉得哪道题出得不对，在答题页点「题目有问题」，写下理由，'
+      +       '小鲸会先判断，确认有问题就收进修改清单。</div>'
       +     weakHtml()
       +     '<div class="set-line"><span>已收起来的争议题</span>'
       +       '<b class="bad-n' + (MEM.badCount() ? ' has' : '') + '">' + MEM.badCount() + ' 道</b></div>'
@@ -2356,7 +2430,37 @@
     }
   }
 
+  /* 马拉松 PK（math-pk.html）同样把错题留在 localStorage。
+     速算题按技能点掉级，概念题只在结算里回顾，不污染技能点账本。 */
+  function absorbMpk() {
+    let raw = null;
+    try { raw = localStorage.getItem('sm_mpk_wrong'); } catch (e) { return; }
+    if (!raw) return;
+    try { localStorage.removeItem('sm_mpk_wrong'); } catch (e) { /* 隐私模式 */ }
+    let list = null;
+    try { list = JSON.parse(raw); } catch (e) { list = null; }
+    if (!list || !list.length) return;
+
+    const ma = SM.subjects && SM.subjects.ma;
+    if (!ma || !ma.srs) return;
+    const skillSet = {};
+    (ma.mods || []).forEach(function (m) {
+      (m.skills || []).forEach(function (s) { skillSet[s.id] = true; });
+    });
+    let n = 0;
+    list.forEach(function (x) {
+      if (!x || !x.skill || !skillSet[x.skill]) return;
+      ma.srs.wrong(x.skill);
+      n++;
+    });
+    if (n) FX.toast('马拉松里错的 ' + n + ' 道速算，已经记进复习');
+  }
+
   absorbPk();
+  absorbMpk();
+
+  /* 从擂台/马拉松点「返回娱乐」回来时带 ?screen=fun，直接落到娱乐页 */
+  if (/[?&]screen=fun\b/.test(location.search)) ST.screen = 'fun';
 
   render();
 
@@ -2375,6 +2479,7 @@
   window.addEventListener('pageshow', function (e) {
     if (!e.persisted) return;
     absorbPk();
+    absorbMpk();
     if (ST.screen === 'home' || ST.screen === 'hub' || ST.screen === 'fun') render();
     else if (ST.screen === 'review' && ST.review && ST.review.src === 'book') openBook();
   });

@@ -3,8 +3,7 @@
    ------------------------------------------------------------
    只有两种请求：
      ① 动作（建房 / 加入 / 取消 / 答题 / 离开）—— 一次性 POST
-     ② 同步 —— 长轮询。对局每 50ms 推进一步就立刻回，
-        没赶上通知最多再等 80ms。客户端收到就马上再发一次。
+     ② 同步 —— 优先使用服务器持续推送，连接不可用时回退长轮询。
 
    断线策略：一轮请求失败不弹窗，退避 0.8s 重试；
    连续失败 5 次才认输，告诉上层「连接断了」。
@@ -48,6 +47,8 @@ export class Net {
     this.onState = null;
     this.onGone = null;
     this._stop = false;
+    this.stream = null;
+    this.generation = 0;
   }
 
   async post(path, body) {
@@ -89,6 +90,7 @@ export class Net {
   }
 
   start(code) {
+    this.stop();
     this.code = code;
     this.lastV = 0;
     this.lastEv = 0;
@@ -96,16 +98,52 @@ export class Net {
     this.fails = 0;
     this.running = true;
     this._stop = false;
-    this.loop();
+    const generation = ++this.generation;
+    if (typeof EventSource === 'undefined') { this.loop(generation); return; }
+    const url = '/api/pk/stream?who=' + encodeURIComponent(this.who)
+      + '&code=' + encodeURIComponent(this.code) + '&v=' + this.lastV + '&e=' + this.lastEv;
+    const stream = new EventSource(url);
+    this.stream = stream;
+    stream.onmessage = (event) => {
+      if (!this.running || generation !== this.generation) return;
+      try { this.accept(JSON.parse(event.data)); }
+      catch (e) { console.warn('[pk] 无法读取战场快照', e); }
+    };
+    stream.onerror = () => {
+      if (!this.running || generation !== this.generation) return;
+      stream.close();
+      this.stream = null;
+      this.loop(generation);
+    };
   }
 
   stop() {
     this.running = false;
     this._stop = true;
+    this.generation++;
+    if (this.stream) this.stream.close();
+    this.stream = null;
   }
 
-  async loop() {
-    while (this.running) {
+  accept(snap) {
+    if (!snap || !snap.ok) {
+      this.stop();
+      if (this.onGone) this.onGone((snap && snap.error) || '房间没了');
+      return;
+    }
+    this.lastV = snap.v;
+    if (!this.gotFirst) {
+      this.gotFirst = true;
+      snap.ev = [];
+    } else {
+      snap.ev = (snap.ev || []).filter((event) => event.i > this.lastEv);
+    }
+    this.lastEv = Math.max(this.lastEv, snap.evn || 0);
+    if (this.onState) this.onState(snap);
+  }
+
+  async loop(generation) {
+    while (this.running && generation === this.generation) {
       const url = '/api/pk/sync?who=' + encodeURIComponent(this.who)
         + '&code=' + encodeURIComponent(this.code) + '&v=' + this.lastV
         + '&e=' + this.lastEv;
@@ -119,7 +157,7 @@ export class Net {
         snap = await r.json();
         this.fails = 0;
       } catch (e) {
-        if (this._stop) return;
+        if (this._stop || generation !== this.generation) return;
         this.fails++;
         if (this.fails >= this.failLimit) {
           this.running = false;
@@ -130,23 +168,9 @@ export class Net {
         continue;
       }
 
-      if (!this.running) return;
+      if (!this.running || generation !== this.generation) return;
 
-      if (!snap || !snap.ok) {
-        this.running = false;
-        if (this.onGone) this.onGone((snap && snap.error) || '房间没了');
-        return;
-      }
-
-      this.lastV = snap.v;
-      /* 第一份快照里带的可能是开局前积攒的旧事件，直接丢掉，
-         不然一进场就是一阵乱响 */
-      if (!this.gotFirst) {
-        this.gotFirst = true;
-        snap.ev = [];
-      }
-      this.lastEv = snap.evn || this.lastEv;
-      if (this.onState) this.onState(snap);
+      this.accept(snap);
     }
   }
 }

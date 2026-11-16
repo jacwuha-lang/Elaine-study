@@ -2006,6 +2006,570 @@ def start_pk_tick():
     threading.Thread(target=pk_tick, daemon=True).start()
 
 
+# ===================================================================
+# 数学 · 机器人马拉松 PK（/api/mpk/*）
+# -------------------------------------------------------------------
+# 和英语擂台同一套思路：服务器以 20Hz 推进两台机器人的距离与速度，
+# 客户端只做三件事 —— 本地出题、本地判对错、照快照画。
+#
+# 为什么速度也放在服务器算：
+#   两台设备看到的「谁领先多少米」必须一致。客户端只上报「这题对/错」，
+#   提速、减速、摔倒、重启全部由这里按规则结算，避免两边各算各的。
+#
+# 题目本地生成（速算复用 js/math/modules.js，概念题在客户端题库），
+# 服务器不关心题目内容，只记账。这样题库可以随便扩充，不用改服务端。
+# ===================================================================
+
+MPK_ENTRY = 50              # 报名费（和英语擂台共用星星池）
+MPK_WIN_BONUS = 75          # 赢家奖励
+MPK_LAP = 400.0             # 一圈 400 米
+MPK_LAPS = 3                # 3 圈
+MPK_DIST = MPK_LAP * MPK_LAPS   # 1200 米
+MPK_MAX_TIME = 480.0        # 单局上限 8 分钟
+MPK_TICK = 0.05             # 服务器推进步长
+MPK_COUNTDOWN = 3.0         # 赛前倒计时
+MPK_DISCONNECT = 8.0        # 掉线判负
+MPK_BASE_SPEED = 4.0        # 起跑速度
+MPK_MIN_SPEED = 2.5
+MPK_MAX_SPEED = 9.0
+MPK_GAIN = 0.20             # 答对基础提速
+MPK_LOSS = 1.5              # 答错基础减速
+MPK_CRASH_AT = 3            # 连续答错几次摔倒
+MPK_RESTART = 2.0           # 摔倒原地重启秒数
+MPK_STREAK_RESET = 999      # 防呆：连胜计数不会用到
+MPK_RACERS = 4              # 同场人数：一个孩子 + 三个 AI（排位是 2 人 + 2 AI）
+MPK_IDLE = 5.0              # 连续多少秒不答题开始降速
+MPK_IDLE_DROP = 0.7         # 降速速率（米/秒 每秒）
+MPK_SECOND_BONUS = 25       # 排位第 2 名奖励（第 1 名 75，第 3、4 名不退）
+
+# 六款机器人：每款只有一项轻微特性，数值和 docs/机器人马拉松PK-PRD.md 对齐。
+# cap 极速 / gain 提速倍率 / loss 减速值 / restart 重启秒数 /
+# combo 连击倍率附加 / start 起跑前 10 秒加成
+MPK_ROBOTS = {
+    "jifeng":  {"name": "疾风", "cap": 9.2, "gain": 1.00, "loss": 1.5, "restart": 2.0, "combo": 0.0,  "start": 0.0},
+    "bailu":   {"name": "白鹭", "cap": 9.0, "gain": 1.05, "loss": 1.5, "restart": 2.0, "combo": 0.0,  "start": 0.0},
+    "tiexi":   {"name": "铁犀", "cap": 9.0, "gain": 1.00, "loss": 1.5, "restart": 1.5, "combo": 0.0,  "start": 0.0},
+    "youzhun": {"name": "游隼", "cap": 9.0, "gain": 1.00, "loss": 1.3, "restart": 2.0, "combo": 0.0,  "start": 0.0},
+    "chitu":   {"name": "赤兔", "cap": 9.0, "gain": 1.00, "loss": 1.5, "restart": 2.0, "combo": 0.05, "start": 0.0},
+    "xingchen":{"name": "星尘", "cap": 9.0, "gain": 1.00, "loss": 1.5, "restart": 2.0, "combo": 0.0,  "start": 0.3},
+}
+MPK_ROBOT_IDS = tuple(MPK_ROBOTS.keys())
+
+# AI 档位：答题间隔（秒）与正确率
+MPK_AI = {
+    "easy":   {"name": "AI·学徒", "gap": 5.5, "acc": 0.50},
+    "normal": {"name": "AI·小将", "gap": 4.2, "acc": 0.65},
+    "hard":   {"name": "AI·健将", "gap": 3.4, "acc": 0.82},
+    "boss":   {"name": "AI·冠军", "gap": 2.6, "acc": 0.93},
+}
+MPK_AI_NAMES = tuple(MPK_AI.keys())
+
+MPK_LOCK = threading.RLock()
+MPK_ROOMS = {}
+MPK_TICK_ON = [False]
+
+
+def mpk_robot(rid):
+    return MPK_ROBOTS.get(rid) or MPK_ROBOTS["jifeng"]
+
+
+def mpk_mult(combo, robot):
+    """连击倍率：1–2 ×1.0，3–5 ×1.2，6–9 ×1.4，10–14 ×1.6，≥15 ×1.8。
+    赤兔每档再 +0.05。"""
+    if combo <= 2:
+        m = 1.0
+    elif combo <= 5:
+        m = 1.2
+    elif combo <= 9:
+        m = 1.4
+    elif combo <= 14:
+        m = 1.6
+    else:
+        m = 1.8
+    return m + float(mpk_robot(robot).get("combo") or 0.0)
+
+
+def mpk_new_code():
+    for _ in range(200):
+        code = "%04d" % random.randint(1000, 9999)
+        if code not in MPK_ROOMS:
+            return code
+    return "%06d" % random.randint(100000, 999999)
+
+
+class MPKRoom(object):
+    def __init__(self, code, host_who, free=False, ai=""):
+        self.code = code
+        self.free = bool(free)
+        self.ai = ai or ""
+        self.state = "waiting"
+        self.players = []
+        self.t = -MPK_COUNTDOWN
+        self.v = 0
+        self.cond = threading.Condition(MPK_LOCK)
+        self.created = time.time()
+        self.ended = 0.0
+        self.over = None
+
+    def bump(self):
+        self.v += 1
+        try:
+            self.cond.notify_all()
+        except Exception:
+            pass
+
+    def find(self, who):
+        for p in self.players:
+            if p["who"] == who:
+                return p
+        return None
+
+    def add(self, who, side, robot, stars):
+        now = time.time()
+        p = {
+            "who": who, "side": side, "robot": robot, "stars": stars,
+            "slot": len(self.players),
+            "dist": 0.0, "speed": MPK_BASE_SPEED,
+            "combo": 0, "max_combo": 0, "right": 0, "wrong": 0,
+            "crashes": 0, "streak": 0, "crash_until": 0.0,
+            "seq": 0, "last_at": 0.0, "ans_t": 0.0, "seen": now,
+            "ai": "", "bot_next": 0.6, "left": False,
+        }
+        self.players.append(p)
+        return p
+
+    def add_bot(self, level, robot=None):
+        level = level if level in MPK_AI else "easy"
+        used = set(p["robot"] for p in self.players)
+        spare = [r for r in MPK_ROBOT_IDS if r not in used] or list(MPK_ROBOT_IDS)
+        if robot not in MPK_ROBOTS:
+            robot = random.choice(spare)
+        p = self.add(MPK_AI[level]["name"], 1, robot, 0)
+        p["ai"] = level
+        p["bot_next"] = 0.8 + random.random() * 0.9
+        self.ai = level
+        return p
+
+    def add_bot_pack(self, level, n):
+        """按挡位上下铺 n 个难度不同的 AI，场上错开一点更热闹。"""
+        order = ["easy", "normal", "hard", "boss"]
+        i = order.index(level) if level in order else 1
+        if i <= 0:
+            picks = order[0:3]
+        elif i >= len(order) - 1:
+            picks = order[-3:]
+        else:
+            picks = [order[i - 1], order[i], order[i + 1]]
+        for k in range(n):
+            self.add_bot(picks[k % len(picks)])
+        return self
+
+    def _cap(self, p):
+        return float(mpk_robot(p["robot"]).get("cap") or MPK_MAX_SPEED)
+
+    def _pub(self, p):
+        lap = min(MPK_LAPS, int(p["dist"] // MPK_LAP))
+        total = p["right"] + p["wrong"]
+        crash = 0.0
+        if p["speed"] <= 0.0 and p["crash_until"] > self.t:
+            crash = round(p["crash_until"] - self.t, 2)
+        idle = 0.0
+        if self.state == "playing" and self.t >= 0 and p["speed"] > 0.0:
+            idle = max(0.0, self.t - p["ans_t"])
+        return {
+            "who": p["who"], "side": p["side"], "slot": p["slot"], "robot": p["robot"],
+            "stars": p["stars"], "ai": p.get("ai") or "",
+            "dist": round(p["dist"], 2), "speed": round(p["speed"], 2),
+            "lap": lap, "combo": p["combo"], "max_combo": p["max_combo"],
+            "right": p["right"], "wrong": p["wrong"],
+            "acc": round(p["right"] / total, 3) if total else 0.0,
+            "crashes": p["crashes"], "streak": p["streak"],
+            "crash": crash, "seq": p["seq"],
+            "idle": round(min(999.0, idle), 1),
+            "left": bool(p.get("left")),
+        }
+
+    def snapshot(self, who):
+        me = None
+        for p in self.players:
+            if p["who"] == who:
+                me = p
+                break
+        op = None
+        if me is not None:
+            rivals = [p for p in self.players if p is not me and not p.get("left")]
+            if rivals:
+                op = max(rivals, key=lambda q: q["dist"])
+        return {
+            "ok": True, "code": self.code, "state": self.state,
+            "t": round(self.t, 2), "max_time": MPK_MAX_TIME,
+            "lap": MPK_LAP, "laps": MPK_LAPS, "dist_total": MPK_DIST,
+            "free": self.free, "ai": self.ai,
+            "me": self._pub(me) if me else None,
+            "op": self._pub(op) if op else None,
+            "racers": [self._pub(p) for p in self.players],
+            "over": self.over, "v": self.v,
+        }
+
+    def do_answer(self, p, ok, seq=None):
+        if self.state != "playing":
+            return {"ok": True, "ignored": 1}
+        if self.t < 0:
+            return {"ok": True, "ignored": 1}
+        if p["speed"] <= 0.0 and p["crash_until"] > self.t:
+            return {"ok": True, "ignored": 1}
+        p["ans_t"] = max(0.0, self.t)
+        if seq is not None:
+            p["seq"] = seq
+        robot = mpk_robot(p["robot"])
+        if ok:
+            p["right"] += 1
+            p["combo"] += 1
+            p["streak"] = 0
+            if p["combo"] > p["max_combo"]:
+                p["max_combo"] = p["combo"]
+            gain = MPK_GAIN * mpk_mult(p["combo"], p["robot"]) * float(robot.get("gain") or 1.0)
+            p["speed"] = min(self._cap(p), p["speed"] + gain)
+            self.bump()
+            return {"ok": True, "combo": p["combo"], "speed": round(p["speed"], 2),
+                    "gain": round(gain, 2), "crash": 0}
+        p["wrong"] += 1
+        p["combo"] = 0
+        p["streak"] += 1
+        p["speed"] = max(MPK_MIN_SPEED, p["speed"] - float(robot.get("loss") or MPK_LOSS))
+        crash = 0.0
+        if p["streak"] >= MPK_CRASH_AT:
+            p["streak"] = 0
+            p["crashes"] += 1
+            crash = float(robot.get("restart") or MPK_RESTART)
+            p["speed"] = 0.0
+            p["crash_until"] = self.t + crash
+        self.bump()
+        return {"ok": True, "combo": 0, "speed": round(p["speed"], 2),
+                "loss": round(float(robot.get("loss") or MPK_LOSS), 2),
+                "crash": round(crash, 2)}
+
+    def _step_bots(self):
+        if self.t < 0:
+            return
+        for b in self.players:
+            if not b.get("ai"):
+                continue
+            spec = MPK_AI.get(b["ai"]) or MPK_AI["easy"]
+            while self.t >= b["bot_next"] and self.state == "playing":
+                ok = random.random() < float(spec["acc"])
+                b["seq"] += 1
+                self.do_answer(b, ok)
+                b["bot_next"] += float(spec["gap"]) * random.uniform(0.88, 1.12)
+
+    def step(self, dt):
+        if self.state != "playing":
+            return
+        self.t += dt
+        if self.t < 0:
+            self.bump()
+            return
+        self._step_bots()
+        for p in self.players:
+            if p.get("left"):
+                continue
+            robot = mpk_robot(p["robot"])
+            if p["speed"] <= 0.0 and p["crash_until"] > self.t:
+                continue
+            if p["speed"] <= 0.0:
+                p["speed"] = MPK_BASE_SPEED
+                p["ans_t"] = self.t       # 重启后重新给 5 秒缓冲
+            # 连续 MPK_IDLE 秒没答题：速度往最低速滑，做题才能止住。
+            # AI 的答题间隔本来就长（学徒 5.5 秒），不参与这条惩罚。
+            if not p.get("ai") and self.t - p["ans_t"] > MPK_IDLE:
+                p["speed"] = max(MPK_MIN_SPEED, p["speed"] - MPK_IDLE_DROP * dt)
+            spd = p["speed"]
+            if self.t < 10.0:
+                spd += float(robot.get("start") or 0.0)
+            spd = min(self._cap(p), spd)
+            p["dist"] = min(MPK_DIST, p["dist"] + spd * dt)
+            if p["dist"] >= MPK_DIST - 1e-6:
+                self.finish(p["slot"], "finish")
+                return
+        if self.t >= MPK_MAX_TIME:
+            self._finish_by_time()
+            return
+        self.bump()
+
+    def _standings(self):
+        alive = [p for p in self.players if not p.get("left")]
+        if not alive:
+            alive = list(self.players)
+        return sorted(
+            alive,
+            key=lambda p: (p["dist"], p["right"] - p["wrong"], p["max_combo"]),
+            reverse=True)
+
+    def _finish_by_time(self):
+        order = self._standings()
+        if not order:
+            return self.finish(-1, "time")
+        if len(order) > 1 and abs(order[0]["dist"] - order[1]["dist"]) < 0.05:
+            a, b = order[0], order[1]
+            ta, tb = a["right"] + a["wrong"], b["right"] + b["wrong"]
+            aa = a["right"] / ta if ta else 0.0
+            ab = b["right"] / tb if tb else 0.0
+            if abs(aa - ab) < 1e-6 and a["max_combo"] == b["max_combo"]:
+                return self.finish(-1, "time")
+        return self.finish(order[0]["slot"], "time")
+
+    def finish(self, win_slot, reason):
+        if self.state != "playing":
+            return
+        self.state = "over"
+        self.ended = time.time()
+        order = self._standings()
+        if win_slot is None and order:
+            win_slot = order[0]["slot"]
+        draw = win_slot is not None and win_slot < 0
+        slots = [p["slot"] for p in order]
+        place = dict((s, i + 1) for i, s in enumerate(slots))
+        awards = {}
+        if not self.free:
+            for p in self.players:
+                if p.get("ai") or p.get("left"):
+                    continue
+                if draw:
+                    bonus = MPK_ENTRY
+                else:
+                    rk = place.get(p["slot"], MPK_RACERS)
+                    bonus = MPK_WIN_BONUS if rk == 1 else (
+                        MPK_SECOND_BONUS if rk == 2 else 0)
+                if bonus:
+                    new = pk_add_stars(p["who"], bonus)
+                    if new is not None:
+                        p["stars"] = new
+                awards[p["who"]] = bonus
+        self.over = {
+            "win": win_slot, "reason": reason,
+            "dur": round(max(0.0, self.t), 1), "draw": bool(draw),
+            "order": slots,
+            "place": dict((str(k), v) for k, v in place.items()),
+            "awards": awards,
+            "win_who": (order[0]["who"] if order and not draw else ""),
+        }
+        self.bump()
+        log("[mpk] %s 结束：%s（%s）" % (self.code, reason, "平局" if draw else "冠军 %s" % (self.over["win_who"] or "-")))
+
+
+def mpk_create(who, free=False, ai=None, robot="jifeng"):
+    who = safe_profile_name(who)
+    if not who:
+        return {"ok": False, "error": "先在设置里填个学习档案的名字"}
+    ai = (ai or "").strip().lower()
+    if ai not in MPK_AI:
+        ai = ""
+    robot = robot if robot in MPK_ROBOTS else "jifeng"
+    if ai:
+        free = True
+    with MPK_LOCK:
+        d, _ = _pk_load(who)
+        if d is None:
+            return {"ok": False, "error": "这台设备还没建过档案，先去首页做几道题"}
+        bal = int(d.get("sm_stars") or 0)
+        if free:
+            new = bal
+        else:
+            if bal < MPK_ENTRY:
+                return {"ok": False, "error": "星星不够 %d 颗，先去闯关或做题攒一攒" % MPK_ENTRY}
+            new = pk_add_stars(who, -MPK_ENTRY)
+            if new is None:
+                return {"ok": False, "error": "星星扣不动，检查一下档案文件"}
+        code = mpk_new_code()
+        room = MPKRoom(code, who, free)
+        room.add(who, 0, robot, new)
+        if ai:
+            room.add_bot_pack(ai, 3)
+            room.state = "playing"
+            room.t = -MPK_COUNTDOWN
+            room.created = time.time()
+        MPK_ROOMS[code] = room
+        log("[mpk] %s 建房：%s（%s）%s" % (code, who, robot, "AI " + ai if ai else "排位"))
+        return {"ok": True, "code": code, "side": 0, "stars": new,
+                "robot": robot, "free": room.free, "ai": ai,
+                "entry": 0 if room.free else MPK_ENTRY, "win": MPK_WIN_BONUS,
+                "state": room.state}
+
+
+def mpk_join(who, code, robot="jifeng", free=False):
+    who = safe_profile_name(who)
+    code = (code or "").strip()
+    if not who:
+        return {"ok": False, "error": "先在设置里填个学习档案的名字"}
+    robot = robot if robot in MPK_ROBOTS else "jifeng"
+    with MPK_LOCK:
+        room = MPK_ROOMS.get(code)
+        if room is None:
+            return {"ok": False, "error": "没有这个房间，房间号再看看"}
+        if room.state != "waiting":
+            return {"ok": False, "error": "这局已经开始了，等下一局"}
+        if room.find(who) is not None:
+            return {"ok": False, "error": "同一个档案不能自己跟自己跑"}
+        humans = [p for p in room.players if not p.get("ai")]
+        if len(humans) >= 2:
+            return {"ok": False, "error": "房间满了"}
+        d, _ = _pk_load(who)
+        if d is None:
+            return {"ok": False, "error": "这台设备还没建过档案，先去首页做几道题"}
+        bal = int(d.get("sm_stars") or 0)
+        sandbox = bool(free) or bool(room.free)
+        if sandbox:
+            new = bal
+            if not room.free:
+                room.free = True
+                host = room.players[0]
+                back = pk_add_stars(host["who"], MPK_ENTRY)
+                if back is not None:
+                    host["stars"] = back
+                log("[mpk] 房间 %s 转成沙盒，房主报名费已退" % code)
+        else:
+            if bal < MPK_ENTRY:
+                return {"ok": False, "error": "星星不够 %d 颗，先去闯关或做题攒一攒" % MPK_ENTRY}
+            new = pk_add_stars(who, -MPK_ENTRY)
+            if new is None:
+                return {"ok": False, "error": "星星扣不动，检查一下档案文件"}
+        room.add(who, 1, robot, new)
+        room.add_bot_pack("hard", 2)
+        room.state = "playing"
+        room.t = -MPK_COUNTDOWN
+        room.created = time.time()
+        room.bump()
+        return {"ok": True, "code": code, "side": 1, "stars": new,
+                "robot": robot, "free": room.free,
+                "entry": 0 if room.free else MPK_ENTRY, "win": MPK_WIN_BONUS}
+
+
+def mpk_cancel(who, code):
+    who = safe_profile_name(who)
+    with MPK_LOCK:
+        room = MPK_ROOMS.get(code)
+        if room is None:
+            return {"ok": True, "refunded": 0}
+        if room.state != "waiting":
+            return {"ok": False, "error": "已经开跑了，报名费退不了"}
+        p = room.find(who)
+        if p is None:
+            return {"ok": False, "error": "不在这间房里"}
+        if room.free:
+            MPK_ROOMS.pop(code, None)
+            room.bump()
+            return {"ok": True, "refunded": 0, "stars": p["stars"], "free": True}
+        new = pk_add_stars(who, MPK_ENTRY)
+        MPK_ROOMS.pop(code, None)
+        room.bump()
+        return {"ok": True, "refunded": MPK_ENTRY,
+                "stars": new if new is not None else p["stars"]}
+
+
+def mpk_answer(who, code, seq, ok):
+    who = safe_profile_name(who)
+    with MPK_LOCK:
+        room = MPK_ROOMS.get(code)
+        if room is None or room.state != "playing":
+            return {"ok": True, "ignored": 1}
+        p = room.find(who)
+        if p is None:
+            return {"ok": False, "error": "不在这间房里"}
+        now = time.time()
+        p["seen"] = now
+        if seq <= p["seq"]:
+            return {"ok": True, "dup": 1, "combo": p["combo"]}
+        if now - p["last_at"] < 0.18:
+            return {"ok": True, "slow": 1, "combo": p["combo"]}
+        p["last_at"] = now
+        return room.do_answer(p, ok, seq)
+
+
+def mpk_sync(who, code, v, since_ev=0):
+    who = safe_profile_name(who)
+    deadline = time.time() + 0.08
+    with MPK_LOCK:
+        room = MPK_ROOMS.get(code)
+        if room is None:
+            return {"ok": False, "gone": True, "error": "房间已经关了"}
+        p = room.find(who)
+        if p is None:
+            return {"ok": False, "gone": True, "error": "你被移出房间了"}
+        p["seen"] = time.time()
+        while room.v <= v:
+            left = deadline - time.time()
+            if left <= 0:
+                break
+            room.cond.wait(left)
+        return room.snapshot(who)
+
+
+def mpk_leave(who, code):
+    who = safe_profile_name(who)
+    with MPK_LOCK:
+        room = MPK_ROOMS.get(code)
+        if room is None:
+            return {"ok": True}
+        p = room.find(who)
+        if p is None:
+            return {"ok": True}
+        if room.state == "waiting":
+            new = p["stars"] if room.free else pk_add_stars(who, MPK_ENTRY)
+            MPK_ROOMS.pop(code, None)
+            room.bump()
+            return {"ok": True, "refunded": 0 if room.free else MPK_ENTRY,
+                    "stars": new}
+        if room.state == "playing":
+            p["left"] = True
+            room.finish(None, "foe-left")
+        return {"ok": True}
+
+
+def mpk_tick():
+    last = time.time()
+    while True:
+        time.sleep(MPK_TICK)
+        now = time.time()
+        # 按真实流逝时间推进，别按固定 0.05：线程偶尔跑不满 20Hz 时，
+        # 固定步长会让比赛时间变慢（8 分钟上限变成十几分钟）。
+        dt = max(0.0, min(0.25, now - last))
+        last = now
+        with MPK_LOCK:
+            for code, room in list(MPK_ROOMS.items()):
+                try:
+                    if room.state == "playing":
+                        offline = []
+                        for p in room.players:
+                            if p.get("ai") or p.get("left"):
+                                continue
+                            if now - p["seen"] > MPK_DISCONNECT:
+                                offline.append(p)
+                        if offline:
+                            for p in offline:
+                                p["left"] = True
+                            room.finish(None, "offline")
+                        else:
+                            room.step(dt)
+                    elif room.state == "waiting":
+                        if now - room.created > 60:
+                            if not room.free:
+                                for p in room.players:
+                                    pk_add_stars(p["who"], MPK_ENTRY)
+                            MPK_ROOMS.pop(code, None)
+                    elif room.state == "over":
+                        if now - room.ended > 180:
+                            MPK_ROOMS.pop(code, None)
+                except Exception as e:
+                    log("[mpk] 推进 %s 出错: %s" % (code, e))
+
+
+def start_mpk_tick():
+    if MPK_TICK_ON[0]:
+        return
+    MPK_TICK_ON[0] = True
+    threading.Thread(target=mpk_tick, daemon=True).start()
+
+
 # ---------------------------------------------------------------- HTTP
 class Handler(SimpleHTTPRequestHandler):
     # 源码类文件一律不缓存。
@@ -2115,6 +2679,43 @@ class Handler(SimpleHTTPRequestHandler):
         # ---------- 双人 PK 擂台 ----------
         # 长轮询：客户端手里的版本没变就先压住，最多 80ms。
         # 对局中服务器每 50ms 推进一步并立刻叫醒，走位和出招跟预览同一拍。
+        if u.path == "/api/pk/stream":
+            who = (qs.get("who") or [""])[0]
+            code = (qs.get("code") or [""])[0]
+            try:
+                v = int((qs.get("v") or ["0"])[0])
+                ev = int((qs.get("e") or ["0"])[0])
+            except ValueError:
+                v, ev = 0, 0
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+            self.send_header("Cache-Control", "no-cache, no-transform")
+            self.send_header("X-Accel-Buffering", "no")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Connection", "close")
+            self.end_headers()
+            self.close_connection = True
+            last_write = time.monotonic()
+            try:
+                while True:
+                    snap = pk_sync(who, code, v, ev)
+                    now = time.monotonic()
+                    if not snap.get("ok") or snap.get("v") != v:
+                        data = json.dumps(snap, ensure_ascii=False, separators=(",", ":"))
+                        self.wfile.write(("data: " + data + "\n\n").encode("utf-8"))
+                        self.wfile.flush()
+                        last_write = now
+                        if not snap.get("ok"):
+                            break
+                        v, ev = snap["v"], snap.get("evn", ev)
+                    elif now - last_write >= 1.0:
+                        self.wfile.write(b": heartbeat\n\n")
+                        self.wfile.flush()
+                        last_write = now
+            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError):
+                pass
+            return
+
         if u.path == "/api/pk/sync":
             who = (qs.get("who") or [""])[0]
             code = (qs.get("code") or [""])[0]
@@ -2127,6 +2728,20 @@ class Handler(SimpleHTTPRequestHandler):
             except ValueError:
                 e = 0
             return self._json(pk_sync(who, code, v, e))
+
+        # ---------- 数学机器人马拉松 ----------
+        if u.path == "/api/mpk/sync":
+            who = (qs.get("who") or [""])[0]
+            code = (qs.get("code") or [""])[0]
+            try:
+                v = int((qs.get("v") or ["0"])[0])
+            except ValueError:
+                v = 0
+            try:
+                e = int((qs.get("e") or ["0"])[0])
+            except ValueError:
+                e = 0
+            return self._json(mpk_sync(who, code, v, e))
 
         # ---------- 学习档案：读 ----------
         if u.path == "/api/profile":
@@ -2242,6 +2857,21 @@ class Handler(SimpleHTTPRequestHandler):
             return self._json(pk_hint(body.get("who"), body.get("code")))
         if u.path == "/api/pk/leave":
             return self._json(pk_leave(body.get("who"), body.get("code")))
+
+        # ---------- 数学机器人马拉松 ----------
+        if u.path == "/api/mpk/create":
+            return self._json(mpk_create(body.get("who"), bool(body.get("free")),
+                                         body.get("ai"), body.get("robot")))
+        if u.path == "/api/mpk/join":
+            return self._json(mpk_join(body.get("who"), body.get("code"),
+                                       body.get("robot"), bool(body.get("free"))))
+        if u.path == "/api/mpk/cancel":
+            return self._json(mpk_cancel(body.get("who"), body.get("code")))
+        if u.path == "/api/mpk/answer":
+            return self._json(mpk_answer(body.get("who"), body.get("code"),
+                                         int(body.get("seq") or 0), bool(body.get("ok"))))
+        if u.path == "/api/mpk/leave":
+            return self._json(mpk_leave(body.get("who"), body.get("code")))
 
         # ---------- 学习档案：写 ----------
         if u.path == "/api/profile":
@@ -2517,6 +3147,7 @@ def main():
 
     srv.daemon_threads = True
     start_pk_tick()
+    start_mpk_tick()
     try:
         srv.serve_forever()
     except KeyboardInterrupt:
