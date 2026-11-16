@@ -18,3 +18,9 @@ __pycache__/
 
 # 私人错题照片，不是项目代码
 新错题/
+
+# 本地导出包和截图
+.trae-html-share-packages/
+.screenshots/
+arcade/.visual-*.png
+arcade/visual-tier-*.png
